@@ -33,30 +33,19 @@ export default function MapScreen() {
         refreshLocation();
     };
 
-    const handleSearch = (query: string) => {
-        setSearchQuery(query);
-    };
-
-    const handleCategoryFilter = (category: string | null) => {
-        setSelectedCategory(category);
-    };
-
-    if (loading && !currentLocation) {
-        return (
-            <SafeAreaView style={styles.safeArea}>
+    const renderMapContent = () => {
+        if (loading && !currentLocation) {
+            return (
                 <View style={styles.centerContainer}>
                     <ActivityIndicator size="large" color="#007AFF" />
                     <Text style={styles.loadingText}>Getting your location...</Text>
                 </View>
-            </SafeAreaView>
-        );
-    }
+            );
+        }
 
-    if (error || !currentLocation) {
-        return (
-            <SafeAreaView style={styles.safeArea}>
+        if (error || !currentLocation) {
+            return (
                 <ScrollView
-                    style={styles.container}
                     contentContainerStyle={styles.centerContainer}
                     refreshControl={
                         <RefreshControl
@@ -71,77 +60,84 @@ export default function MapScreen() {
                     </Text>
                     <Text style={styles.retryText}>Pull down to try again</Text>
                 </ScrollView>
-            </SafeAreaView>
+            );
+        }
+
+        return (
+            <View style={styles.mapContainer}>
+                <MapView
+                    style={styles.map}
+                    initialRegion={{
+                        latitude: currentLocation.latitude,
+                        longitude: currentLocation.longitude,
+                        latitudeDelta: 0.0222,
+                        longitudeDelta: 0.0121,
+                    }}
+                    showsUserLocation={true}
+                    showsMyLocationButton={true}
+                    showsCompass={true}
+                    toolbarEnabled={false}
+                >
+                    {/* User location marker */}
+                    <Marker
+                        coordinate={{
+                            latitude: currentLocation.latitude,
+                            longitude: currentLocation.longitude,
+                        }}
+                        title="Your Location"
+                        pinColor="#007AFF"
+                    />
+
+                    {/* Nearby places markers */}
+                    {places.map((place) => (
+                        <Marker
+                            key={place.id}
+                            coordinate={{
+                                latitude: place.geometry.location.lat,
+                                longitude: place.geometry.location.lng,
+                            }}
+                            title={place.name}
+                            description={place.vicinity}
+                            pinColor="#FF6B6B"
+                            onPress={() => {
+                            }}
+                        />
+                    ))}
+                </MapView>
+
+                {/* Info overlay */}
+                <View style={styles.infoOverlay}>
+                    <Text style={styles.infoText}>
+                        📍 {places.length} places found
+                        {(searchQuery || selectedCategory) && ' with current filters'}
+                    </Text>
+                </View>
+
+                {/* Loading overlay when refreshing with existing data */}
+                {loading && (
+                    <View style={styles.refreshOverlay}>
+                        <ActivityIndicator size="small" color="#007AFF" />
+                        <Text style={styles.refreshText}>Updating places...</Text>
+                    </View>
+                )}
+            </View>
         );
-    }
+    };
 
     return (
         <SafeAreaView style={styles.safeArea}>
             <View style={styles.container}>
                 <SearchHeader
-                    onSearch={handleSearch}
-                    onCategoryFilter={handleCategoryFilter}
+                    onSearch={setSearchQuery}
+                    onCategoryFilter={setSelectedCategory}
                     searchQuery={searchQuery}
                     selectedCategory={selectedCategory}
                 />
                 <NetworkStatus />
 
-                <View style={styles.mapContainer}>
-                    <MapView
-                        style={styles.map}
-                        initialRegion={{
-                            latitude: currentLocation.latitude,
-                            longitude: currentLocation.longitude,
-                            latitudeDelta: 0.0222,
-                            longitudeDelta: 0.0121,
-                        }}
-                        showsUserLocation={true}
-                        showsMyLocationButton={true}
-                        showsCompass={true}
-                        toolbarEnabled={false}
-                    >
-                        {/* User location marker */}
-                        <Marker
-                            coordinate={{
-                                latitude: currentLocation.latitude,
-                                longitude: currentLocation.longitude,
-                            }}
-                            title="Your Location"
-                            pinColor="#007AFF"
-                        />
-
-                        {/* Nearby places markers */}
-                        {places.map((place) => (
-                            <Marker
-                                key={place.id}
-                                coordinate={{
-                                    latitude: place.geometry.location.lat,
-                                    longitude: place.geometry.location.lng,
-                                }}
-                                title={place.name}
-                                description={place.vicinity}
-                                pinColor="#FF6B6B"
-                                onPress={() => {
-                                }}
-                            />
-                        ))}
-                    </MapView>
-
-                    {/* Info overlay */}
-                    <View style={styles.infoOverlay}>
-                        <Text style={styles.infoText}>
-                            📍 {places.length} places found
-                            {(searchQuery || selectedCategory) && ' with current filters'}
-                        </Text>
-                    </View>
-
-                    {/* Loading overlay when refreshing with existing data */}
-                    {loading && (
-                        <View style={styles.refreshOverlay}>
-                            <ActivityIndicator size="small" color="#007AFF" />
-                            <Text style={styles.refreshText}>Updating places...</Text>
-                        </View>
-                    )}
+                {/* Map content area - always visible but shows loading/error states */}
+                <View style={styles.contentArea}>
+                    {renderMapContent()}
                 </View>
             </View>
         </SafeAreaView>
@@ -154,6 +150,9 @@ const styles = StyleSheet.create({
         backgroundColor: '#ffffff',
     },
     container: {
+        flex: 1,
+    },
+    contentArea: {
         flex: 1,
     },
     mapContainer: {

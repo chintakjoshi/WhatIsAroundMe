@@ -38,12 +38,6 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const finalType = searchType !== undefined ? searchType : selectedCategory;
             const finalKeyword = searchKeyword !== undefined ? searchKeyword : searchQuery;
 
-            console.log('Searching places:', {
-                type: finalType,
-                keyword: finalKeyword,
-                location: currentLocation
-            });
-
             const nearbyPlaces = await PlacesService.fetchNearbyPlaces(
                 currentLocation.latitude,
                 currentLocation.longitude,
@@ -52,7 +46,6 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 finalKeyword || undefined
             );
 
-            console.log(`Found ${nearbyPlaces.length} places`);
             setPlaces(nearbyPlaces);
         } catch (err: any) {
             console.error('Search places error:', err);
