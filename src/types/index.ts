@@ -23,6 +23,7 @@ export interface Place {
     opening_hours?: {
         open_now: boolean;
     };
+    user_ratings_total?: number;
 }
 
 export interface PlaceCategory {

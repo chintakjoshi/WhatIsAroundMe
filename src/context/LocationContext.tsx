@@ -8,8 +8,13 @@ interface LocationContextType {
     places: Place[];
     loading: boolean;
     error: string | null;
+    searchQuery: string;
+    selectedCategory: string | null;
     refreshLocation: () => Promise<void>;
-    searchPlaces: (type?: string) => Promise<void>;
+    searchPlaces: (type?: string, keyword?: string) => Promise<void>;
+    setSearchQuery: (query: string) => void;
+    setSelectedCategory: (category: string | null) => void;
+    clearFilters: () => void;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
@@ -19,18 +24,27 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [places, setPlaces] = useState<Place[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
+    const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-    const searchPlaces = async (type?: string) => {
+    const searchPlaces = async (type?: string, keyword?: string) => {
         if (!currentLocation) return;
 
         try {
             setError(null);
+
+            // Use provided parameters or fall back to state
+            const searchType = type || selectedCategory;
+            const searchKeyword = keyword || searchQuery;
+
             const nearbyPlaces = await PlacesService.fetchNearbyPlaces(
                 currentLocation.latitude,
                 currentLocation.longitude,
                 1500,
-                type
+                searchType,
+                searchKeyword
             );
+
             setPlaces(nearbyPlaces);
         } catch (err: any) {
             console.error('Search places error:', err);
@@ -58,9 +72,44 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
     };
 
+    const clearFilters = () => {
+        setSearchQuery('');
+        setSelectedCategory(null);
+        if (currentLocation) {
+            searchPlaces('', '');
+        }
+    };
+
+    // Initial load - get location first, then places
     useEffect(() => {
-        refreshLocation();
+        const initializeApp = async () => {
+            try {
+                setLoading(true);
+
+                const location = await LocationService.getCurrentLocation();
+                if (location) {
+                    setCurrentLocation(location);
+
+                    // Get places after location is set
+                    await searchPlaces();
+                }
+            } catch (err: any) {
+                console.error('Initialization error:', err);
+                setError(err.message || 'Failed to initialize app');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        initializeApp();
     }, []);
+
+    // Update places when search query or category changes
+    useEffect(() => {
+        if (currentLocation) {
+            searchPlaces();
+        }
+    }, [searchQuery, selectedCategory]);
 
     return (
         <LocationContext.Provider
@@ -69,8 +118,13 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 places,
                 loading,
                 error,
+                searchQuery,
+                selectedCategory,
                 refreshLocation,
                 searchPlaces,
+                setSearchQuery,
+                setSelectedCategory,
+                clearFilters,
             }}
         >
             {children}
