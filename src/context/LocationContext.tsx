@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Location, Place } from '../types';
 import { LocationService } from '../services/locationService';
-import { PlacesService } from '../services/placesService';
+import PlacesService from '../services/placesService';
 
 interface LocationContextType {
     currentLocation: Location | null;
@@ -20,6 +20,24 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const searchPlaces = async (type?: string) => {
+        if (!currentLocation) return;
+
+        try {
+            setError(null);
+            const nearbyPlaces = await PlacesService.fetchNearbyPlaces(
+                currentLocation.latitude,
+                currentLocation.longitude,
+                1500,
+                type
+            );
+            setPlaces(nearbyPlaces);
+        } catch (err: any) {
+            console.error('Search places error:', err);
+            setError(err.message || 'Failed to fetch nearby places');
+        }
+    };
+
     const refreshLocation = async () => {
         try {
             setLoading(true);
@@ -32,26 +50,11 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             } else {
                 setError('Unable to get your current location');
             }
-        } catch (err) {
-            setError('Failed to refresh location');
+        } catch (err: any) {
+            console.error('Refresh location error:', err);
+            setError(err.message || 'Failed to refresh location');
         } finally {
             setLoading(false);
-        }
-    };
-
-    const searchPlaces = async (type?: string) => {
-        if (!currentLocation) return;
-
-        try {
-            const nearbyPlaces = await PlacesService.fetchNearbyPlaces(
-                currentLocation.latitude,
-                currentLocation.longitude,
-                1500,
-                type
-            );
-            setPlaces(nearbyPlaces);
-        } catch (err) {
-            setError('Failed to fetch nearby places');
         }
     };
 

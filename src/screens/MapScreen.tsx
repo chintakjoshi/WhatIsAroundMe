@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Dimensions, ActivityIndicator } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { useLocation } from '../context/LocationContext';
 
@@ -10,15 +10,16 @@ export default function MapScreen() {
 
     if (loading) {
         return (
-            <View style={styles.container}>
-                <Text>Loading your location...</Text>
+            <View style={styles.centerContainer}>
+                <ActivityIndicator size="large" color="#007AFF" />
+                <Text style={styles.loadingText}>Loading your location...</Text>
             </View>
         );
     }
 
     if (error || !currentLocation) {
         return (
-            <View style={styles.container}>
+            <View style={styles.centerContainer}>
                 <Text style={styles.error}>
                     {error || 'Unable to get your location'}
                 </Text>
@@ -33,22 +34,20 @@ export default function MapScreen() {
                 initialRegion={{
                     latitude: currentLocation.latitude,
                     longitude: currentLocation.longitude,
-                    latitudeDelta: 0.01,
-                    longitudeDelta: 0.01,
+                    latitudeDelta: 0.0222,
+                    longitudeDelta: 0.0121,
+                }}
+                region={{
+                    latitude: currentLocation.latitude,
+                    longitude: currentLocation.longitude,
+                    latitudeDelta: 0.0222,
+                    longitudeDelta: 0.0121,
                 }}
                 showsUserLocation={true}
                 showsMyLocationButton={true}
+                showsCompass={true}
+                toolbarEnabled={true}
             >
-                {/* User location marker */}
-                <Marker
-                    coordinate={{
-                        latitude: currentLocation.latitude,
-                        longitude: currentLocation.longitude,
-                    }}
-                    title="Your Location"
-                    pinColor="blue"
-                />
-
                 {/* Nearby places markers */}
                 {places.map((place) => (
                     <Marker
@@ -74,9 +73,20 @@ const styles = StyleSheet.create({
         width: width,
         height: height,
     },
+    centerContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    loadingText: {
+        marginTop: 10,
+        fontSize: 16,
+        color: '#666',
+    },
     error: {
         color: 'red',
         textAlign: 'center',
-        marginTop: 50,
+        fontSize: 16,
     },
 });
