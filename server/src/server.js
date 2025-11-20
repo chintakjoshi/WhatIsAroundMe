@@ -12,7 +12,22 @@ const PORT = process.env.PORT || 3001;
 
 // CORS for Expo development
 app.use(cors({
-    origin: ['http://localhost:8081', 'exp://192.168.*.*:8081'],
+    origin: function (origin, callback) {
+        // Allowing requests with no origin
+        if (!origin) return callback(null, true);
+        
+        // Allowing all Expo development origins
+        if (
+            origin.includes('exp://') || 
+            origin.includes('localhost:') ||
+            origin.includes('192.168.') ||
+            origin.includes('127.0.0.1:')
+        ) {
+            return callback(null, true);
+        }
+        
+        return callback(new Error('Not allowed by CORS'), false);
+    },
     methods: ['GET', 'POST'],
     credentials: true
 }));
