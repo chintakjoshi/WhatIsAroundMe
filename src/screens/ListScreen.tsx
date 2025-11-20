@@ -9,23 +9,43 @@ import {
     ActivityIndicator
 } from 'react-native';
 import { useLocation } from '../context/LocationContext';
+import SearchHeader from '../components/SearchHeader';
 
+// Define the EmptyComponent separately
 const EmptyComponent = () => (
     <View style={styles.emptyContainer}>
         <Text style={styles.emptyTitle}>No places found</Text>
         <Text style={styles.emptyText}>
-            Pull down to refresh and search again
+            Try adjusting your search or filters
         </Text>
     </View>
 );
 
 export default function ListScreen() {
-    const { places, loading, error, refreshLocation } = useLocation();
+    const {
+        places,
+        loading,
+        error,
+        refreshLocation,
+        searchQuery,
+        selectedCategory,
+        setSearchQuery,
+        setSelectedCategory
+    } = useLocation();
 
     const onRefresh = () => {
         refreshLocation();
     };
 
+    const handleSearch = (query: string) => {
+        setSearchQuery(query);
+    };
+
+    const handleCategoryFilter = (category: string | null) => {
+        setSelectedCategory(category);
+    };
+
+    // Show loading only on initial load, not during refresh
     if (loading && places.length === 0) {
         return (
             <SafeAreaView style={styles.safeArea}>
@@ -39,14 +59,22 @@ export default function ListScreen() {
 
     return (
         <SafeAreaView style={styles.safeArea}>
+            <SearchHeader
+                onSearch={handleSearch}
+                onCategoryFilter={handleCategoryFilter}
+                searchQuery={searchQuery}
+                selectedCategory={selectedCategory}
+            />
+
             <View style={styles.container}>
                 <View style={styles.header}>
                     <Text style={styles.title}>Nearby Places</Text>
                     <Text style={styles.subtitle}>
                         {places.length > 0
-                            ? `Found ${places.length} places near you`
+                            ? `Found ${places.length} places`
                             : 'No places found'
                         }
+                        {(searchQuery || selectedCategory) && ' with current filters'}
                     </Text>
                 </View>
 
@@ -70,17 +98,30 @@ export default function ListScreen() {
                             <Text style={styles.placeName}>{item.name}</Text>
                             <Text style={styles.placeAddress}>{item.vicinity}</Text>
                             <View style={styles.placeDetails}>
-                                {item.rating && (
+                                {(item.rating || item.rating === 0) && (
                                     <View style={styles.ratingContainer}>
                                         <Text style={styles.placeRating}>⭐ {item.rating}</Text>
+                                        {item.user_ratings_total !== undefined && item.user_ratings_total !== null && (
+                                            <Text style={styles.ratingCount}>
+                                                ({item.user_ratings_total})
+                                            </Text>
+                                        )}
                                     </View>
                                 )}
-                                {item.types && (
+                                {item.types && item.types.length > 0 && (
                                     <Text style={styles.placeTypes} numberOfLines={1}>
                                         {item.types.slice(0, 2).join(' • ')}
                                     </Text>
                                 )}
                             </View>
+                            {item.opening_hours && (
+                                <Text style={[
+                                    styles.openStatus,
+                                    item.opening_hours.open_now ? styles.open : styles.closed
+                                ]}>
+                                    {item.opening_hours.open_now ? '🟢 Open Now' : '🔴 Closed'}
+                                </Text>
+                            )}
                         </View>
                     )}
                     contentContainerStyle={styles.listContent}
@@ -102,16 +143,14 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     header: {
-        paddingTop: 20,
-        paddingBottom: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
+        paddingTop: 16,
+        paddingBottom: 12,
     },
     title: {
-        fontSize: 32,
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#1a1a1a',
-        marginBottom: 8,
+        marginBottom: 4,
     },
     subtitle: {
         fontSize: 16,
@@ -130,7 +169,7 @@ const styles = StyleSheet.create({
         textAlign: 'center',
     },
     listContent: {
-        paddingTop: 16,
+        paddingTop: 8,
         paddingBottom: 30,
     },
     placeCard: {
@@ -168,17 +207,25 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
+        marginBottom: 8,
     },
     ratingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
         backgroundColor: '#fff9e6',
         paddingHorizontal: 10,
         paddingVertical: 5,
         borderRadius: 8,
+        gap: 4,
     },
     placeRating: {
         fontSize: 14,
         fontWeight: '600',
         color: '#e6b400',
+    },
+    ratingCount: {
+        fontSize: 12,
+        color: '#999',
     },
     placeTypes: {
         fontSize: 13,
@@ -187,6 +234,19 @@ const styles = StyleSheet.create({
         textAlign: 'right',
         marginLeft: 12,
         fontStyle: 'italic',
+    },
+    openStatus: {
+        fontSize: 13,
+        fontWeight: '500',
+        paddingTop: 4,
+        borderTopWidth: 1,
+        borderTopColor: '#f0f0f0',
+    },
+    open: {
+        color: '#22c55e',
+    },
+    closed: {
+        color: '#ef4444',
     },
     emptyContainer: {
         alignItems: 'center',

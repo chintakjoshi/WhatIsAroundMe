@@ -2,12 +2,9 @@ import axios from 'axios';
 import { API_URL } from '@env';
 import { Place, PlaceCategory } from '../types';
 
-// For development - replace with your Windows machine's IP address
-const BACKEND_BASE_URL = API_URL;
-
 class PlacesService {
     private api = axios.create({
-        baseURL: BACKEND_BASE_URL,
+        baseURL: API_URL,
         timeout: 15000,
     });
 
@@ -15,18 +12,28 @@ class PlacesService {
         latitude: number,
         longitude: number,
         radius: number = 1500,
-        type?: string
+        type?: string | null,
+        keyword?: string
     ): Promise<Place[]> {
         try {
 
-            const response = await this.api.get('/places/nearby', {
-                params: {
-                    lat: latitude,
-                    lng: longitude,
-                    radius,
-                    type: type || undefined,
-                },
-            });
+            const params: any = {
+                lat: latitude,
+                lng: longitude,
+                radius,
+            };
+
+            // Only add type if it's provided and not null/empty
+            if (type && type.trim() !== '') {
+                params.type = type;
+            }
+
+            // Only add keyword if it's provided and not null/empty
+            if (keyword && keyword.trim() !== '') {
+                params.keyword = keyword;
+            }
+
+            const response = await this.api.get('/places/nearby', { params });
 
             if (response.data.success) {
                 return response.data.data;
@@ -34,8 +41,12 @@ class PlacesService {
                 throw new Error(response.data.message || 'Failed to fetch places');
             }
         } catch (error: any) {
-            console.error('Error fetching nearby places:', error);
-            console.error('Error details:', error.response?.data);
+            console.error('Error fetching nearby places:', {
+                message: error.message,
+                response: error.response?.data,
+                url: error.config?.url,
+                params: error.config?.params
+            });
             throw new Error(error.response?.data?.message || 'Network error - check if server is running');
         }
     }
@@ -47,11 +58,15 @@ class PlacesService {
             if (response.data.success) {
                 return response.data.data;
             } else {
-                throw new Error('Failed to fetch place details');
+                throw new Error(response.data.error || 'Failed to fetch place details');
             }
         } catch (error: any) {
-            console.error('Error fetching place details:', error);
-            throw new Error(error.response?.data?.message || 'Network error');
+            console.error('Error fetching place details:', {
+                message: error.message,
+                response: error.response?.data,
+                status: error.response?.status
+            });
+            throw new Error(error.response?.data?.message || 'Failed to load place details');
         }
     }
 
