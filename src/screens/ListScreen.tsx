@@ -8,9 +8,13 @@ import {
     SafeAreaView,
     ActivityIndicator
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/AppNavigator';
 import { useLocation } from '../context/LocationContext';
 import SearchHeader from '../components/SearchHeader';
 import NetworkStatus from '../components/NetworkStatus';
+import PlaceCard from '../components/PlaceCard';
 
 // Define the EmptyComponent separately
 const EmptyComponent = () => (
@@ -22,7 +26,10 @@ const EmptyComponent = () => (
     </View>
 );
 
+type ListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MainTabs'>;
+
 export default function ListScreen() {
+    const navigation = useNavigation<ListScreenNavigationProp>();
     const {
         places,
         loading,
@@ -34,18 +41,13 @@ export default function ListScreen() {
     } = useLocation();
 
     const showInitialLoading = loading && places.length === 0;
-    const showSearchLoading = loading && places.length > 0;
 
     const onRefresh = () => {
         refreshLocation();
     };
 
-    const handleSearch = (query: string) => {
-        setSearchQuery(query);
-    };
-
-    const handleCategoryFilter = (category: string | null) => {
-        setSelectedCategory(category);
+    const handlePlacePress = (placeId: string) => {
+        navigation.navigate('PlaceDetail', { placeId });
     };
 
     if (showInitialLoading) {
@@ -86,14 +88,6 @@ export default function ListScreen() {
             />
             <NetworkStatus />
 
-            {/* Show search loading overlay */}
-            {showSearchLoading && (
-                <View style={styles.searchLoadingOverlay}>
-                    <ActivityIndicator size="small" color="#007AFF" />
-                    <Text style={styles.searchLoadingText}>Searching...</Text>
-                </View>
-            )}
-
             <View style={styles.container}>
                 <View style={styles.header}>
                     <Text style={styles.title}>Nearby Places</Text>
@@ -118,39 +112,11 @@ export default function ListScreen() {
                         />
                     }
                     renderItem={({ item, index }) => (
-                        <View style={[
-                            styles.placeCard,
-                            index === 0 && styles.firstCard,
-                            index === places.length - 1 && styles.lastCard
-                        ]}>
-                            <Text style={styles.placeName}>{item.name}</Text>
-                            <Text style={styles.placeAddress}>{item.vicinity}</Text>
-                            <View style={styles.placeDetails}>
-                                {(item.rating || item.rating === 0) && (
-                                    <View style={styles.ratingContainer}>
-                                        <Text style={styles.placeRating}>⭐ {item.rating}</Text>
-                                        {item.user_ratings_total !== undefined && item.user_ratings_total !== null && (
-                                            <Text style={styles.ratingCount}>
-                                                ({item.user_ratings_total})
-                                            </Text>
-                                        )}
-                                    </View>
-                                )}
-                                {item.types && item.types.length > 0 && (
-                                    <Text style={styles.placeTypes} numberOfLines={1}>
-                                        {item.types.slice(0, 2).join(' • ')}
-                                    </Text>
-                                )}
-                            </View>
-                            {item.opening_hours && (
-                                <Text style={[
-                                    styles.openStatus,
-                                    item.opening_hours.open_now ? styles.open : styles.closed
-                                ]}>
-                                    {item.opening_hours.open_now ? '🟢 Open Now' : '🔴 Closed'}
-                                </Text>
-                            )}
-                        </View>
+                        <PlaceCard
+                            place={item}
+                            onPress={() => handlePlacePress(item.id)}
+                            showActions={true}
+                        />
                     )}
                     contentContainerStyle={styles.listContent}
                     ListEmptyComponent={places.length === 0 && !loading ? EmptyComponent : undefined}
@@ -168,7 +134,7 @@ const styles = StyleSheet.create({
     },
     container: {
         flex: 1,
-        paddingHorizontal: 20,
+        paddingHorizontal: 16,
     },
     header: {
         paddingTop: 16,
@@ -199,82 +165,6 @@ const styles = StyleSheet.create({
     listContent: {
         paddingTop: 8,
         paddingBottom: 30,
-    },
-    placeCard: {
-        backgroundColor: 'white',
-        padding: 20,
-        marginBottom: 12,
-        borderRadius: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
-        borderWidth: 1,
-        borderColor: '#f8f8f8',
-    },
-    firstCard: {
-        marginTop: 8,
-    },
-    lastCard: {
-        marginBottom: 30,
-    },
-    placeName: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#1a1a1a',
-        marginBottom: 6,
-    },
-    placeAddress: {
-        fontSize: 15,
-        color: '#666',
-        marginBottom: 12,
-        lineHeight: 20,
-    },
-    placeDetails: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-        marginBottom: 8,
-    },
-    ratingContainer: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#fff9e6',
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 8,
-        gap: 4,
-    },
-    placeRating: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#e6b400',
-    },
-    ratingCount: {
-        fontSize: 12,
-        color: '#999',
-    },
-    placeTypes: {
-        fontSize: 13,
-        color: '#999',
-        flex: 1,
-        textAlign: 'right',
-        marginLeft: 12,
-        fontStyle: 'italic',
-    },
-    openStatus: {
-        fontSize: 13,
-        fontWeight: '500',
-        paddingTop: 4,
-        borderTopWidth: 1,
-        borderTopColor: '#f0f0f0',
-    },
-    open: {
-        color: '#22c55e',
-    },
-    closed: {
-        color: '#ef4444',
     },
     emptyContainer: {
         alignItems: 'center',

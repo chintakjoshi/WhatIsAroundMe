@@ -87,6 +87,27 @@ class GooglePlacesService {
 
         return errorMessages[status] || 'Failed to fetch places';
     }
+
+    async getPlacePhoto(photoReference, maxWidth = 400) {
+        try {
+            const photoUrl = `${this.baseURL}/photo?maxwidth=${maxWidth}&photoreference=${photoReference}&key=${this.apiKey}`;
+
+            // Verify the photo exists by making a HEAD request
+            await axios.head(photoUrl, { timeout: 5000 });
+
+            return {
+                success: true,
+                photoUrl: photoUrl,
+            };
+        } catch (error) {
+            console.error('Google Places Photo API Error:', error.message);
+            return {
+                success: false,
+                error: 'PHOTO_ERROR',
+                message: 'Failed to fetch place photo',
+            };
+        }
+    }
 }
 
 module.exports = new GooglePlacesService();

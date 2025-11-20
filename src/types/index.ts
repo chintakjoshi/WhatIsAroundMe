@@ -19,11 +19,16 @@ export interface Place {
     types?: string[];
     photos?: Array<{
         photo_reference: string;
+        html_attributions?: string[];
     }>;
     opening_hours?: {
         open_now: boolean;
     };
     user_ratings_total?: number;
+    formatted_phone_number?: string;
+    website?: string;
+    distance?: number;
+    formattedDistance?: string;
 }
 
 export interface PlaceCategory {

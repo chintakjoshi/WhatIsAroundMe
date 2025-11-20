@@ -46,7 +46,21 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 finalKeyword || undefined
             );
 
-            setPlaces(nearbyPlaces);
+            const placesWithDistances = nearbyPlaces.map(place => {
+                const distance = LocationService.calculateDistance(
+                    currentLocation.latitude,
+                    currentLocation.longitude,
+                    place.geometry.location.lat,
+                    place.geometry.location.lng
+                );
+
+                return {
+                    ...place,
+                    distance,
+                    formattedDistance: LocationService.formatDistance(distance)
+                };
+            });
+            setPlaces(placesWithDistances);
         } catch (err: any) {
             console.error('Search places error:', err);
             setError(err.message || 'Failed to fetch nearby places');
