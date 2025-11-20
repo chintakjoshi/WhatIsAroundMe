@@ -8,7 +8,7 @@ const BACKEND_BASE_URL = API_URL;
 class PlacesService {
     private api = axios.create({
         baseURL: BACKEND_BASE_URL,
-        timeout: 10000,
+        timeout: 15000,
     });
 
     async fetchNearbyPlaces(
@@ -18,7 +18,6 @@ class PlacesService {
         type?: string
     ): Promise<Place[]> {
         try {
-            console.log('Fetching places from:', `${BACKEND_BASE_URL}/places/nearby`);
 
             const response = await this.api.get('/places/nearby', {
                 params: {
@@ -28,8 +27,6 @@ class PlacesService {
                     type: type || undefined,
                 },
             });
-
-            console.log('Places response:', response.data);
 
             if (response.data.success) {
                 return response.data.data;

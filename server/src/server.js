@@ -5,16 +5,20 @@ const morgan = require('morgan');
 require('dotenv').config();
 
 const placesRoutes = require('./routes/places');
+const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// Middleware
-app.use(helmet());
+// CORS for Expo development
 app.use(cors({
-    origin: ['http://localhost:3000', 'exp://192.168.*.*:8081'] // Allow Expo Go
+    origin: ['http://localhost:8081', 'exp://192.168.*.*:8081'],
+    methods: ['GET', 'POST'],
+    credentials: true
 }));
-app.use(morgan('combined'));
+
+app.use(helmet());
+app.use(morgan('dev'));
 app.use(express.json());
 
 // Routes
@@ -29,16 +33,8 @@ app.get('/health', (req, res) => {
     });
 });
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-    console.error('Error:', err.stack);
-    res.status(500).json({
-        success: false,
-        error: 'Something went wrong!'
-    });
-});
+app.use(errorHandler);
 
-// 404 handler - FIXED: Use proper wildcard syntax
 app.use('*', (req, res) => {
     res.status(404).json({
         success: false,
@@ -51,5 +47,5 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`🚀 Server running on port ${PORT}`);
     console.log(`📱 Environment: ${process.env.NODE_ENV}`);
     console.log(`🌐 Accessible at: http://localhost:${PORT}`);
-    console.log(`📲 Also accessible via network IP`);
+    console.log(`🔗 Health check: http://localhost:${PORT}/health`);
 });
