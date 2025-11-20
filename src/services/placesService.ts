@@ -1,3 +1,4 @@
+// src/services/placesService.ts
 import axios from 'axios';
 import { API_URL } from '@env';
 import { Place, PlaceCategory } from '../types';
@@ -40,7 +41,6 @@ class PlacesService {
                 url: error.config?.url
             });
 
-            // Handle specific error cases
             if (error.code === 'ECONNREFUSED') {
                 throw new Error('Cannot connect to server. Make sure your server is running on ' + API_URL);
             } else if (error.response?.status === 400) {
@@ -70,6 +70,23 @@ class PlacesService {
         }
     }
 
+    async getPlacePhoto(photoReference: string, maxWidth: number = 400): Promise<string> {
+        try {
+            const response = await this.api.get(`/places/photo/${photoReference}`, {
+                params: { maxWidth }
+            });
+
+            if (response.data.success) {
+                return response.data.data.photoUrl;
+            } else {
+                throw new Error('Failed to get place photo');
+            }
+        } catch (error: any) {
+            console.error('Error fetching place photo:', error);
+            throw new Error('Failed to load place photo');
+        }
+    }
+
     async getPlaceCategories(): Promise<PlaceCategory[]> {
         try {
             const response = await this.api.get('/places/categories');
@@ -81,7 +98,6 @@ class PlacesService {
             }
         } catch (error: any) {
             console.error('Error fetching categories:', error);
-            // Return default categories as fallback
             return this.getDefaultCategories();
         }
     }

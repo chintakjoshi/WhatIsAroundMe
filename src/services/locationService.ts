@@ -1,5 +1,5 @@
 import * as Location from 'expo-location';
-import { Location as LocationType } from '../types';
+import { Location as LocationType, Place } from '../types';
 
 export class LocationService {
     static async requestPermissions(): Promise<boolean> {
@@ -42,7 +42,7 @@ export class LocationService {
         lat2: number,
         lon2: number
     ): number {
-        const R = 6371; // Earth's radius in km
+        const R = 6371;
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a =
@@ -50,6 +50,14 @@ export class LocationService {
             Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
             Math.sin(dLon / 2) * Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c;
+        return R * c * 1000;
+    }
+
+    static formatDistance(distanceInMeters: number): string {
+        if (distanceInMeters < 1000) {
+            return `${Math.round(distanceInMeters)}m away`;
+        } else {
+            return `${(distanceInMeters / 1000).toFixed(1)}km away`;
+        }
     }
 }

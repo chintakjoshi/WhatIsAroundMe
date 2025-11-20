@@ -113,6 +113,37 @@ class PlacesController {
             data: categories,
         });
     }
+
+    async getPlacePhoto(req, res, next) {
+        try {
+            const { photoReference } = req.params;
+            const { maxWidth = 400 } = req.query;
+
+            if (!photoReference) {
+                return res.status(400).json({
+                    error: 'Missing photo reference',
+                });
+            }
+
+            const result = await googlePlacesService.getPlacePhoto(photoReference, maxWidth);
+
+            if (!result.success) {
+                return res.status(400).json({
+                    error: result.error,
+                });
+            }
+
+            res.json({
+                success: true,
+                data: {
+                    photoUrl: result.photoUrl,
+                },
+            });
+
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 
 module.exports = new PlacesController();

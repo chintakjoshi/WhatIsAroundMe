@@ -5,5 +5,6 @@ const placesController = require('../controllers/placesController');
 router.get('/nearby', placesController.getNearbyPlaces);
 router.get('/categories', placesController.getPlaceCategories);
 router.get('/details/:placeId', placesController.getPlaceDetails);
+router.get('/photo/:photoReference', placesController.getPlacePhoto);
 
 module.exports = router;
