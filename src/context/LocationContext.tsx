@@ -59,7 +59,26 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     };
 
     useEffect(() => {
-        refreshLocation();
+        const initializeApp = async () => {
+            try {
+                setLoading(true);
+
+                const location = await LocationService.getCurrentLocation();
+                if (location) {
+                    setCurrentLocation(location);
+
+                    // Get places after location is set
+                    await searchPlaces();
+                }
+            } catch (err: any) {
+                console.error('Initialization error:', err);
+                setError(err.message || 'Failed to initialize app');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        initializeApp();
     }, []);
 
     return (
