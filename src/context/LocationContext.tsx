@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Location, Place } from '../types';
 import { LocationService } from '../services/locationService';
 import PlacesService from '../services/placesService';
@@ -18,6 +18,7 @@ interface LocationContextType {
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
+let searchTimeout: NodeJS.Timeout | null = null;
 
 export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
@@ -27,32 +28,35 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
-    const searchPlaces = async (type?: string, keyword?: string) => {
+    const searchPlaces = useCallback(async (searchType?: string | null, searchKeyword?: string) => {
         if (!currentLocation) return;
 
         try {
             setError(null);
+            setLoading(true);
 
-            // Use provided parameters or fall back to state
-            const searchType = type || selectedCategory;
-            const searchKeyword = keyword || searchQuery;
+            const finalType = searchType !== undefined ? searchType : selectedCategory;
+            const finalKeyword = searchKeyword !== undefined ? searchKeyword : searchQuery;
 
             const nearbyPlaces = await PlacesService.fetchNearbyPlaces(
                 currentLocation.latitude,
                 currentLocation.longitude,
                 1500,
-                searchType,
-                searchKeyword
+                finalType || undefined,
+                finalKeyword || undefined
             );
 
             setPlaces(nearbyPlaces);
         } catch (err: any) {
             console.error('Search places error:', err);
             setError(err.message || 'Failed to fetch nearby places');
+            setPlaces([]);
+        } finally {
+            setLoading(false);
         }
-    };
+    }, [currentLocation, selectedCategory, searchQuery]);
 
-    const refreshLocation = async () => {
+    const refreshLocation = useCallback(async () => {
         try {
             setLoading(true);
             setError(null);
@@ -60,7 +64,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             const location = await LocationService.getCurrentLocation();
             if (location) {
                 setCurrentLocation(location);
-                await searchPlaces();
+                // We'll search places after location is set
             } else {
                 setError('Unable to get your current location');
             }
@@ -70,28 +74,16 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         } finally {
             setLoading(false);
         }
-    };
-
-    const clearFilters = () => {
-        setSearchQuery('');
-        setSelectedCategory(null);
-        if (currentLocation) {
-            searchPlaces('', '');
-        }
-    };
+    }, []);
 
     // Initial load - get location first, then places
     useEffect(() => {
         const initializeApp = async () => {
             try {
                 setLoading(true);
-
                 const location = await LocationService.getCurrentLocation();
                 if (location) {
                     setCurrentLocation(location);
-
-                    // Get places after location is set
-                    await searchPlaces();
                 }
             } catch (err: any) {
                 console.error('Initialization error:', err);
@@ -104,12 +96,29 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         initializeApp();
     }, []);
 
-    // Update places when search query or category changes
+    // Fetch places when location, searchQuery, or selectedCategory changes
     useEffect(() => {
-        if (currentLocation) {
-            searchPlaces();
+        if (!currentLocation) return;
+
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
         }
-    }, [searchQuery, selectedCategory]);
+
+        searchTimeout = setTimeout(() => {
+            searchPlaces();
+        }, 500);
+
+        return () => {
+            if (searchTimeout) {
+                clearTimeout(searchTimeout);
+            }
+        };
+    }, [searchQuery, selectedCategory, currentLocation, searchPlaces]);
+
+    const clearFilters = useCallback(() => {
+        setSearchQuery('');
+        setSelectedCategory(null);
+    }, []);
 
     return (
         <LocationContext.Provider

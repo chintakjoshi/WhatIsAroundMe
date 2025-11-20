@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     View,
     TextInput,
@@ -36,7 +36,11 @@ export default function SearchHeader({
     const [showFilters, setShowFilters] = useState(false);
     const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
-    const handleSearch = (text: string) => {
+    useEffect(() => {
+        setLocalSearchQuery(searchQuery);
+    }, [searchQuery]);
+
+    const handleSearchChange = (text: string) => {
         setLocalSearchQuery(text);
         onSearch(text);
     };
@@ -52,7 +56,7 @@ export default function SearchHeader({
         onCategoryFilter(null);
     };
 
-    const hasActiveFilters = searchQuery || selectedCategory;
+    const hasActiveFilters = localSearchQuery || selectedCategory;
 
     return (
         <View style={styles.container}>
@@ -63,7 +67,7 @@ export default function SearchHeader({
                         style={styles.searchInput}
                         placeholder="Search places..."
                         value={localSearchQuery}
-                        onChangeText={handleSearch}
+                        onChangeText={handleSearchChange}
                         returnKeyType="search"
                     />
                     {hasActiveFilters && (

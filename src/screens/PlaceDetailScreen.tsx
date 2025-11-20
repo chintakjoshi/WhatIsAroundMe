@@ -78,8 +78,10 @@ export default function PlaceDetailScreen() {
     const openMaps = () => {
         if (place?.geometry?.location) {
             const { lat, lng } = place.geometry.location;
-            const url = `https://maps.google.com/?q=${lat},${lng}`;
-            Linking.openURL(url);
+            const url = `https://maps.apple.com/?q=${lat},${lng}&z=15&t=m`;
+            Linking.openURL(url).catch(err =>
+                console.error('Error opening maps:', err)
+            );
         }
     };
 

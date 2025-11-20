@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { useLocation } from '../context/LocationContext';
 import SearchHeader from '../components/SearchHeader';
+import NetworkStatus from '../components/NetworkStatus';
 
 // Define the EmptyComponent separately
 const EmptyComponent = () => (
@@ -25,13 +26,15 @@ export default function ListScreen() {
     const {
         places,
         loading,
-        error,
         refreshLocation,
         searchQuery,
         selectedCategory,
         setSearchQuery,
         setSelectedCategory
     } = useLocation();
+
+    const showInitialLoading = loading && places.length === 0;
+    const showSearchLoading = loading && places.length > 0;
 
     const onRefresh = () => {
         refreshLocation();
@@ -44,6 +47,22 @@ export default function ListScreen() {
     const handleCategoryFilter = (category: string | null) => {
         setSelectedCategory(category);
     };
+
+    if (showInitialLoading) {
+        return (
+            <SafeAreaView style={styles.safeArea}>
+                <View style={styles.centerContainer}>
+                    <ActivityIndicator size="large" color="#007AFF" />
+                    <Text style={styles.loadingText}>
+                        {searchQuery || selectedCategory
+                            ? `Searching for ${searchQuery || selectedCategory}...`
+                            : 'Finding places near you...'
+                        }
+                    </Text>
+                </View>
+            </SafeAreaView>
+        );
+    }
 
     // Show loading only on initial load, not during refresh
     if (loading && places.length === 0) {
@@ -60,11 +79,20 @@ export default function ListScreen() {
     return (
         <SafeAreaView style={styles.safeArea}>
             <SearchHeader
-                onSearch={handleSearch}
-                onCategoryFilter={handleCategoryFilter}
+                onSearch={setSearchQuery}
+                onCategoryFilter={setSelectedCategory}
                 searchQuery={searchQuery}
                 selectedCategory={selectedCategory}
             />
+            <NetworkStatus />
+
+            {/* Show search loading overlay */}
+            {showSearchLoading && (
+                <View style={styles.searchLoadingOverlay}>
+                    <ActivityIndicator size="small" color="#007AFF" />
+                    <Text style={styles.searchLoadingText}>Searching...</Text>
+                </View>
+            )}
 
             <View style={styles.container}>
                 <View style={styles.header}>
@@ -266,5 +294,27 @@ const styles = StyleSheet.create({
         color: '#999',
         textAlign: 'center',
         lineHeight: 22,
+    },
+    searchLoadingOverlay: {
+        position: 'absolute',
+        top: 100,
+        alignSelf: 'center',
+        backgroundColor: 'rgba(255,255,255,0.9)',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+        borderRadius: 20,
+        flexDirection: 'row',
+        alignItems: 'center',
+        zIndex: 1000,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
+    },
+    searchLoadingText: {
+        marginLeft: 8,
+        fontSize: 14,
+        color: '#666',
     },
 });
