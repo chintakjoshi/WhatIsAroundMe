@@ -23,15 +23,8 @@ class PlacesService {
                 radius,
             };
 
-            // Only add type if it's provided and not null/empty
-            if (type && type.trim() !== '') {
-                params.type = type;
-            }
-
-            // Only add keyword if it's provided and not null/empty
-            if (keyword && keyword.trim() !== '') {
-                params.keyword = keyword;
-            }
+            if (type) params.type = type;
+            if (keyword) params.keyword = keyword;
 
             const response = await this.api.get('/places/nearby', { params });
 
@@ -41,13 +34,20 @@ class PlacesService {
                 throw new Error(response.data.message || 'Failed to fetch places');
             }
         } catch (error: any) {
-            console.error('Error fetching nearby places:', {
+            console.error('Places API Error:', {
                 message: error.message,
-                response: error.response?.data,
-                url: error.config?.url,
-                params: error.config?.params
+                code: error.code,
+                url: error.config?.url
             });
-            throw new Error(error.response?.data?.message || 'Network error - check if server is running');
+
+            // Handle specific error cases
+            if (error.code === 'ECONNREFUSED') {
+                throw new Error('Cannot connect to server. Make sure your server is running on ' + API_URL);
+            } else if (error.response?.status === 400) {
+                throw new Error(error.response.data.message || 'Invalid request parameters');
+            } else {
+                throw new Error(error.response?.data?.message || 'Failed to load places. Check your connection.');
+            }
         }
     }
 

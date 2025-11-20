@@ -12,6 +12,7 @@ import {
 import MapView, { Marker } from 'react-native-maps';
 import { useLocation } from '../context/LocationContext';
 import SearchHeader from '../components/SearchHeader';
+import NetworkStatus from '../components/NetworkStatus';
 
 const { width, height } = Dimensions.get('window');
 
@@ -83,6 +84,7 @@ export default function MapScreen() {
                     searchQuery={searchQuery}
                     selectedCategory={selectedCategory}
                 />
+                <NetworkStatus />
 
                 <View style={styles.mapContainer}>
                     <MapView
@@ -93,17 +95,21 @@ export default function MapScreen() {
                             latitudeDelta: 0.0222,
                             longitudeDelta: 0.0121,
                         }}
-                        region={{
-                            latitude: currentLocation.latitude,
-                            longitude: currentLocation.longitude,
-                            latitudeDelta: 0.0222,
-                            longitudeDelta: 0.0121,
-                        }}
                         showsUserLocation={true}
                         showsMyLocationButton={true}
                         showsCompass={true}
-                        toolbarEnabled={true}
+                        toolbarEnabled={false}
                     >
+                        {/* User location marker */}
+                        <Marker
+                            coordinate={{
+                                latitude: currentLocation.latitude,
+                                longitude: currentLocation.longitude,
+                            }}
+                            title="Your Location"
+                            pinColor="#007AFF"
+                        />
+
                         {/* Nearby places markers */}
                         {places.map((place) => (
                             <Marker
@@ -115,6 +121,8 @@ export default function MapScreen() {
                                 title={place.name}
                                 description={place.vicinity}
                                 pinColor="#FF6B6B"
+                                onPress={() => {
+                                }}
                             />
                         ))}
                     </MapView>
