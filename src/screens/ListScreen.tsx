@@ -15,21 +15,25 @@ import { useLocation } from '../context/LocationContext';
 import SearchHeader from '../components/SearchHeader';
 import NetworkStatus from '../components/NetworkStatus';
 import PlaceCard from '../components/PlaceCard';
+import { useTheme } from '../context/ThemeContext';
 
-// Define the EmptyComponent separately
-const EmptyComponent = () => (
-    <View style={styles.emptyContainer}>
-        <Text style={styles.emptyTitle}>No places found</Text>
-        <Text style={styles.emptyText}>
-            Try adjusting your search or filters
-        </Text>
-    </View>
-);
+const EmptyComponent = () => {
+    const { colors } = useTheme();
+    return (
+        <View style={styles.emptyContainer}>
+            <Text style={[styles.emptyTitle, { color: colors.text }]}>No places found</Text>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                Try adjusting your search or filters
+            </Text>
+        </View>
+    );
+};
 
 type ListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MainTabs'>;
 
 export default function ListScreen() {
     const navigation = useNavigation<ListScreenNavigationProp>();
+    const { colors } = useTheme();
     const {
         places,
         loading,
@@ -52,10 +56,10 @@ export default function ListScreen() {
 
     if (showInitialLoading) {
         return (
-            <SafeAreaView style={styles.safeArea}>
+            <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
                 <View style={styles.centerContainer}>
-                    <ActivityIndicator size="large" color="#007AFF" />
-                    <Text style={styles.loadingText}>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={[styles.loadingText, { color: colors.text }]}>
                         {searchQuery || selectedCategory
                             ? `Searching for ${searchQuery || selectedCategory}...`
                             : 'Finding places near you...'
@@ -66,20 +70,8 @@ export default function ListScreen() {
         );
     }
 
-    // Show loading only on initial load, not during refresh
-    if (loading && places.length === 0) {
-        return (
-            <SafeAreaView style={styles.safeArea}>
-                <View style={styles.centerContainer}>
-                    <ActivityIndicator size="large" color="#007AFF" />
-                    <Text style={styles.loadingText}>Finding places near you...</Text>
-                </View>
-            </SafeAreaView>
-        );
-    }
-
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
             <SearchHeader
                 onSearch={setSearchQuery}
                 onCategoryFilter={setSelectedCategory}
@@ -88,10 +80,18 @@ export default function ListScreen() {
             />
             <NetworkStatus />
 
-            <View style={styles.container}>
+            {/* Show search loading overlay */}
+            {loading && places.length > 0 && (
+                <View style={[styles.searchLoadingOverlay, { backgroundColor: colors.card }]}>
+                    <ActivityIndicator size="small" color={colors.primary} />
+                    <Text style={[styles.searchLoadingText, { color: colors.text }]}>Searching...</Text>
+                </View>
+            )}
+
+            <View style={[styles.container, { backgroundColor: colors.background }]}>
                 <View style={styles.header}>
-                    <Text style={styles.title}>Nearby Places</Text>
-                    <Text style={styles.subtitle}>
+                    <Text style={[styles.title, { color: colors.text }]}>Nearby Places</Text>
+                    <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
                         {places.length > 0
                             ? `Found ${places.length} places`
                             : 'No places found'
@@ -107,8 +107,8 @@ export default function ListScreen() {
                         <RefreshControl
                             refreshing={loading && places.length > 0}
                             onRefresh={onRefresh}
-                            tintColor="#007AFF"
-                            colors={['#007AFF']}
+                            tintColor={colors.primary}
+                            colors={[colors.primary]}
                         />
                     }
                     renderItem={({ item, index }) => (
@@ -130,7 +130,6 @@ export default function ListScreen() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#ffffff',
     },
     container: {
         flex: 1,
@@ -143,12 +142,10 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 28,
         fontWeight: 'bold',
-        color: '#1a1a1a',
         marginBottom: 4,
     },
     subtitle: {
         fontSize: 16,
-        color: '#666',
     },
     centerContainer: {
         flex: 1,
@@ -157,9 +154,8 @@ const styles = StyleSheet.create({
         padding: 40,
     },
     loadingText: {
-        fontSize: 16,
-        color: '#666',
         marginTop: 16,
+        fontSize: 16,
         textAlign: 'center',
     },
     listContent: {
@@ -175,13 +171,11 @@ const styles = StyleSheet.create({
     emptyTitle: {
         fontSize: 20,
         fontWeight: '600',
-        color: '#666',
         marginBottom: 12,
         textAlign: 'center',
     },
     emptyText: {
         fontSize: 16,
-        color: '#999',
         textAlign: 'center',
         lineHeight: 22,
     },
@@ -189,7 +183,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 100,
         alignSelf: 'center',
-        backgroundColor: 'rgba(255,255,255,0.9)',
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 20,
@@ -205,6 +198,5 @@ const styles = StyleSheet.create({
     searchLoadingText: {
         marginLeft: 8,
         fontSize: 14,
-        color: '#666',
     },
 });

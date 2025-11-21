@@ -11,6 +11,7 @@ import {
 import { Navigation, Phone, Globe, MapPin } from 'lucide-react-native';
 import { Place } from '../types';
 import PlacesService from '../services/placesService';
+import { useTheme } from '../context/ThemeContext';
 
 interface PlaceCardProps {
     place: Place;
@@ -19,6 +20,7 @@ interface PlaceCardProps {
 }
 
 export default function PlaceCard({ place, onPress, showActions = true }: PlaceCardProps) {
+    const { colors } = useTheme();
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [imageLoading, setImageLoading] = useState(false);
 
@@ -87,10 +89,9 @@ export default function PlaceCard({ place, onPress, showActions = true }: PlaceC
 
     return (
         <TouchableOpacity
-            style={styles.card}
+            style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={onPress}
-            activeOpacity={onPress ? 0.7 : 1}
-            disabled={!onPress}
+            activeOpacity={0.7}
         >
             {/* Place Image */}
             {imageUrl && !imageLoading && (
@@ -103,25 +104,25 @@ export default function PlaceCard({ place, onPress, showActions = true }: PlaceC
 
             {/* Image Loading Placeholder */}
             {imageLoading && (
-                <View style={[styles.image, styles.imagePlaceholder]}>
-                    <Text style={styles.placeholderText}>Loading image...</Text>
+                <View style={[styles.image, styles.imagePlaceholder, { backgroundColor: colors.searchBackground }]}>
+                    <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>Loading image...</Text>
                 </View>
             )}
 
             <View style={styles.content}>
                 {/* Header Row */}
                 <View style={styles.header}>
-                    <Text style={styles.name} numberOfLines={2}>{place.name}</Text>
+                    <Text style={[styles.name, { color: colors.text }]} numberOfLines={2}>{place.name}</Text>
                     {place.formattedDistance && (
-                        <Text style={styles.distance}>{place.formattedDistance}</Text>
+                        <Text style={[styles.distance, { color: colors.primary }]}>{place.formattedDistance}</Text>
                     )}
                 </View>
 
                 {/* Address */}
                 {place.vicinity && (
                     <View style={styles.addressRow}>
-                        <MapPin size={14} color="#666" />
-                        <Text style={styles.address} numberOfLines={2}>{place.vicinity}</Text>
+                        <MapPin size={14} color={colors.textSecondary} />
+                        <Text style={[styles.address, { color: colors.textSecondary }]} numberOfLines={2}>{place.vicinity}</Text>
                     </View>
                 )}
 
@@ -129,7 +130,7 @@ export default function PlaceCard({ place, onPress, showActions = true }: PlaceC
                 <View style={styles.detailsRow}>
                     {/* Rating */}
                     {(place.rating || place.rating === 0) && (
-                        <View style={styles.ratingContainer}>
+                        <View style={[styles.ratingContainer, { backgroundColor: colors.searchBackground }]}>
                             <Text style={styles.rating}>⭐ {place.rating}</Text>
                             {place.user_ratings_total && (
                                 <Text style={styles.ratingCount}>({place.user_ratings_total})</Text>
@@ -139,7 +140,7 @@ export default function PlaceCard({ place, onPress, showActions = true }: PlaceC
 
                     {/* Types */}
                     {place.types && place.types.length > 0 && (
-                        <Text style={styles.types} numberOfLines={1}>
+                        <Text style={[styles.types, { color: colors.textSecondary }]} numberOfLines={1}>
                             {place.types.slice(0, 2).join(' • ')}
                         </Text>
                     )}
@@ -157,13 +158,13 @@ export default function PlaceCard({ place, onPress, showActions = true }: PlaceC
 
                 {/* Quick Actions */}
                 {showActions && (
-                    <View style={styles.actions}>
+                    <View style={[styles.actions, { borderTopColor: colors.border }]}>
                         <TouchableOpacity
                             style={styles.actionButton}
                             onPress={() => handleActionPress('directions')}
                         >
-                            <Navigation size={16} color="#007AFF" />
-                            <Text style={styles.actionText}>Directions</Text>
+                            <Navigation size={16} color={colors.primary} />
+                            <Text style={[styles.actionText, { color: colors.primary }]}>Directions</Text>
                         </TouchableOpacity>
 
                         <TouchableOpacity
@@ -171,10 +172,10 @@ export default function PlaceCard({ place, onPress, showActions = true }: PlaceC
                             onPress={() => handleActionPress('phone')}
                             disabled={!place.formatted_phone_number}
                         >
-                            <Phone size={16} color={place.formatted_phone_number ? "#007AFF" : "#ccc"} />
+                            <Phone size={16} color={place.formatted_phone_number ? colors.primary : colors.textSecondary} />
                             <Text style={[
                                 styles.actionText,
-                                !place.formatted_phone_number && styles.actionTextDisabled
+                                { color: place.formatted_phone_number ? colors.primary : colors.textSecondary }
                             ]}>
                                 Call
                             </Text>
@@ -185,10 +186,10 @@ export default function PlaceCard({ place, onPress, showActions = true }: PlaceC
                             onPress={() => handleActionPress('website')}
                             disabled={!place.website}
                         >
-                            <Globe size={16} color={place.website ? "#007AFF" : "#ccc"} />
+                            <Globe size={16} color={place.website ? colors.primary : colors.textSecondary} />
                             <Text style={[
                                 styles.actionText,
-                                !place.website && styles.actionTextDisabled
+                                { color: place.website ? colors.primary : colors.textSecondary }
                             ]}>
                                 Website
                             </Text>

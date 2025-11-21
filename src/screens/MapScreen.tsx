@@ -13,6 +13,8 @@ import MapView, { Marker } from 'react-native-maps';
 import { useLocation } from '../context/LocationContext';
 import SearchHeader from '../components/SearchHeader';
 import NetworkStatus from '../components/NetworkStatus';
+import { useTheme } from '../context/ThemeContext';
+import { mapDarkStyle, mapLightStyle } from '../constants/mapStyles';
 
 const { width, height } = Dimensions.get('window');
 
@@ -29,6 +31,8 @@ export default function MapScreen() {
         setSelectedCategory
     } = useLocation();
 
+    const { colors, isDark } = useTheme();
+
     const onRefresh = () => {
         refreshLocation();
     };
@@ -37,8 +41,8 @@ export default function MapScreen() {
         if (loading && !currentLocation) {
             return (
                 <View style={styles.centerContainer}>
-                    <ActivityIndicator size="large" color="#007AFF" />
-                    <Text style={styles.loadingText}>Getting your location...</Text>
+                    <ActivityIndicator size="large" color={colors.primary} />
+                    <Text style={[styles.loadingText, { color: colors.text }]}>Getting your location...</Text>
                 </View>
             );
         }
@@ -51,14 +55,14 @@ export default function MapScreen() {
                         <RefreshControl
                             refreshing={loading}
                             onRefresh={onRefresh}
-                            tintColor="#007AFF"
+                            tintColor={colors.primary}
                         />
                     }
                 >
-                    <Text style={styles.error}>
+                    <Text style={[styles.error, { color: colors.text }]}>
                         {error || 'Unable to get your location'}
                     </Text>
-                    <Text style={styles.retryText}>Pull down to try again</Text>
+                    <Text style={[styles.retryText, { color: colors.textSecondary }]}>Pull down to try again</Text>
                 </ScrollView>
             );
         }
@@ -73,10 +77,12 @@ export default function MapScreen() {
                         latitudeDelta: 0.0222,
                         longitudeDelta: 0.0121,
                     }}
+                    customMapStyle={isDark ? mapDarkStyle : []}
                     showsUserLocation={true}
                     showsMyLocationButton={true}
                     showsCompass={true}
                     toolbarEnabled={false}
+                    key={`map-${isDark ? 'dark' : 'light'}`}
                 >
                     {/* User location marker */}
                     <Marker
@@ -85,7 +91,7 @@ export default function MapScreen() {
                             longitude: currentLocation.longitude,
                         }}
                         title="Your Location"
-                        pinColor="#007AFF"
+                        pinColor={colors.primary}
                     />
 
                     {/* Nearby places markers */}
@@ -99,15 +105,13 @@ export default function MapScreen() {
                             title={place.name}
                             description={place.vicinity}
                             pinColor="#FF6B6B"
-                            onPress={() => {
-                            }}
                         />
                     ))}
                 </MapView>
 
                 {/* Info overlay */}
-                <View style={styles.infoOverlay}>
-                    <Text style={styles.infoText}>
+                <View style={[styles.infoOverlay, { backgroundColor: colors.card }]}>
+                    <Text style={[styles.infoText, { color: colors.text }]}>
                         📍 {places.length} places found
                         {(searchQuery || selectedCategory) && ' with current filters'}
                     </Text>
@@ -115,9 +119,9 @@ export default function MapScreen() {
 
                 {/* Loading overlay when refreshing with existing data */}
                 {loading && (
-                    <View style={styles.refreshOverlay}>
-                        <ActivityIndicator size="small" color="#007AFF" />
-                        <Text style={styles.refreshText}>Updating places...</Text>
+                    <View style={[styles.refreshOverlay, { backgroundColor: colors.card }]}>
+                        <ActivityIndicator size="small" color={colors.primary} />
+                        <Text style={[styles.refreshText, { color: colors.text }]}>Updating places...</Text>
                     </View>
                 )}
             </View>
@@ -125,7 +129,7 @@ export default function MapScreen() {
     };
 
     return (
-        <SafeAreaView style={styles.safeArea}>
+        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
             <View style={styles.container}>
                 <SearchHeader
                     onSearch={setSearchQuery}
@@ -135,7 +139,6 @@ export default function MapScreen() {
                 />
                 <NetworkStatus />
 
-                {/* Map content area - always visible but shows loading/error states */}
                 <View style={styles.contentArea}>
                     {renderMapContent()}
                 </View>
@@ -147,7 +150,6 @@ export default function MapScreen() {
 const styles = StyleSheet.create({
     safeArea: {
         flex: 1,
-        backgroundColor: '#ffffff',
     },
     container: {
         flex: 1,
@@ -172,17 +174,14 @@ const styles = StyleSheet.create({
     loadingText: {
         marginTop: 12,
         fontSize: 16,
-        color: '#666',
     },
     error: {
-        color: '#ff3b30',
         textAlign: 'center',
         fontSize: 18,
         marginBottom: 8,
         fontWeight: '500',
     },
     retryText: {
-        color: '#666',
         textAlign: 'center',
         fontSize: 14,
     },
@@ -190,7 +189,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 16,
         alignSelf: 'center',
-        backgroundColor: 'rgba(255,255,255,0.95)',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
@@ -203,13 +201,11 @@ const styles = StyleSheet.create({
     infoText: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#333',
     },
     refreshOverlay: {
         position: 'absolute',
         top: 60,
         alignSelf: 'center',
-        backgroundColor: 'rgba(255,255,255,0.9)',
         paddingHorizontal: 20,
         paddingVertical: 10,
         borderRadius: 20,
@@ -224,6 +220,5 @@ const styles = StyleSheet.create({
     refreshText: {
         marginLeft: 8,
         fontSize: 14,
-        color: '#666',
     },
 });

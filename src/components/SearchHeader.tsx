@@ -7,7 +7,12 @@ import {
     ScrollView,
     Text
 } from 'react-native';
-import { Search, Filter, X } from 'lucide-react-native';
+
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../navigation/AppNavigator';
+import { Search, Filter, X, Settings } from 'lucide-react-native';
+import { useTheme } from '../context/ThemeContext';
 
 interface SearchHeaderProps {
     onSearch: (query: string) => void;
@@ -27,12 +32,16 @@ const categories = [
     { id: 'pharmacy', name: 'Pharmacy', icon: '💊' },
 ];
 
+type SearchHeaderNavigationProp = StackNavigationProp<RootStackParamList, 'MainTabs'>;
+
 export default function SearchHeader({
     onSearch,
     onCategoryFilter,
     searchQuery,
     selectedCategory
 }: SearchHeaderProps) {
+    const navigation = useNavigation<SearchHeaderNavigationProp>();
+    const { colors } = useTheme();
     const [showFilters, setShowFilters] = useState(false);
     const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
@@ -58,36 +67,52 @@ export default function SearchHeader({
 
     const hasActiveFilters = localSearchQuery || selectedCategory;
 
+    const openSettings = () => {
+        navigation.navigate('Settings');
+    };
+
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: colors.header, borderBottomColor: colors.border }]}>
             <View style={styles.searchContainer}>
-                <View style={styles.searchInputContainer}>
-                    <Search size={20} color="#666" />
+                <View style={[styles.searchInputContainer, { backgroundColor: colors.searchBackground }]}>
+                    <Search size={20} color={colors.textSecondary} />
                     <TextInput
-                        style={styles.searchInput}
+                        style={[styles.searchInput, { color: colors.text }]}
                         placeholder="Search places..."
+                        placeholderTextColor={colors.textSecondary}
                         value={localSearchQuery}
                         onChangeText={handleSearchChange}
                         returnKeyType="search"
                     />
                     {hasActiveFilters && (
                         <TouchableOpacity onPress={clearAll}>
-                            <X size={20} color="#666" />
+                            <X size={20} color={colors.textSecondary} />
                         </TouchableOpacity>
                     )}
                 </View>
-                <TouchableOpacity
-                    style={[
-                        styles.filterButton,
-                        (showFilters || selectedCategory) && styles.filterButtonActive
-                    ]}
-                    onPress={() => setShowFilters(!showFilters)}
-                >
-                    <Filter
-                        size={20}
-                        color={(showFilters || selectedCategory) ? "#007AFF" : "#666"}
-                    />
-                </TouchableOpacity>
+
+                <View style={styles.buttonsContainer}>
+                    <TouchableOpacity
+                        style={[
+                            styles.filterButton,
+                            { backgroundColor: colors.searchBackground },
+                            (showFilters || selectedCategory) && styles.filterButtonActive
+                        ]}
+                        onPress={() => setShowFilters(!showFilters)}
+                    >
+                        <Filter
+                            size={20}
+                            color={(showFilters || selectedCategory) ? colors.primary : colors.textSecondary}
+                        />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={[styles.settingsButton, { backgroundColor: colors.searchBackground }]}
+                        onPress={openSettings}
+                    >
+                        <Settings size={20} color={colors.textSecondary} />
+                    </TouchableOpacity>
+                </View>
             </View>
 
             {showFilters && (
@@ -102,13 +127,15 @@ export default function SearchHeader({
                             key={category.id}
                             style={[
                                 styles.categoryButton,
-                                selectedCategory === category.id && styles.categoryButtonSelected
+                                { backgroundColor: colors.searchBackground },
+                                selectedCategory === category.id && [styles.categoryButtonSelected, { backgroundColor: colors.primary }]
                             ]}
                             onPress={() => handleCategorySelect(category.id)}
                         >
                             <Text style={styles.categoryIcon}>{category.icon}</Text>
                             <Text style={[
                                 styles.categoryText,
+                                { color: colors.textSecondary },
                                 selectedCategory === category.id && styles.categoryTextSelected
                             ]}>
                                 {category.name}
@@ -120,7 +147,7 @@ export default function SearchHeader({
 
             {hasActiveFilters && !showFilters && (
                 <View style={styles.activeFiltersContainer}>
-                    <Text style={styles.activeFiltersText}>
+                    <Text style={[styles.activeFiltersText, { color: colors.primary }]}>
                         Active filters:
                         {searchQuery && ` "${searchQuery}"`}
                         {selectedCategory && ` ${categories.find(c => c.id === selectedCategory)?.name}`}
@@ -133,12 +160,10 @@ export default function SearchHeader({
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: 'white',
         paddingHorizontal: 16,
         paddingTop: 8,
         paddingBottom: 8,
         borderBottomWidth: 1,
-        borderBottomColor: '#f0f0f0',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
@@ -154,7 +179,6 @@ const styles = StyleSheet.create({
         flex: 1,
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f8f9fa',
         borderRadius: 12,
         paddingHorizontal: 12,
         paddingVertical: 10,
@@ -163,15 +187,21 @@ const styles = StyleSheet.create({
     searchInput: {
         flex: 1,
         fontSize: 16,
-        color: '#333',
+    },
+    buttonsContainer: {
+        flexDirection: 'row',
+        gap: 8,
     },
     filterButton: {
         padding: 10,
         borderRadius: 10,
-        backgroundColor: '#f8f9fa',
     },
     filterButtonActive: {
-        backgroundColor: '#e3f2fd',
+        opacity: 0.8,
+    },
+    settingsButton: {
+        padding: 10,
+        borderRadius: 10,
     },
     categoriesContainer: {
         maxHeight: 60,
@@ -182,7 +212,6 @@ const styles = StyleSheet.create({
     categoryButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        backgroundColor: '#f8f9fa',
         paddingHorizontal: 16,
         paddingVertical: 8,
         borderRadius: 20,
@@ -190,7 +219,6 @@ const styles = StyleSheet.create({
         gap: 6,
     },
     categoryButtonSelected: {
-        backgroundColor: '#007AFF',
     },
     categoryIcon: {
         fontSize: 16,
@@ -198,7 +226,6 @@ const styles = StyleSheet.create({
     categoryText: {
         fontSize: 14,
         fontWeight: '500',
-        color: '#666',
     },
     categoryTextSelected: {
         color: 'white',
@@ -209,7 +236,6 @@ const styles = StyleSheet.create({
     },
     activeFiltersText: {
         fontSize: 12,
-        color: '#007AFF',
         fontStyle: 'italic',
     },
 });
