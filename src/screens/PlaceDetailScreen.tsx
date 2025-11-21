@@ -11,6 +11,7 @@ import {
 import { useRoute } from '@react-navigation/native';
 import { Star, MapPin, Phone, Globe, Clock, Navigation } from 'lucide-react-native';
 import PlacesService from '../services/placesService';
+import { useTheme } from '../context/ThemeContext';
 
 interface PlaceDetails {
     id: string;
@@ -39,6 +40,7 @@ interface PlaceDetails {
 export default function PlaceDetailScreen() {
     const route = useRoute();
     const { placeId } = route.params as { placeId: string };
+    const { colors } = useTheme();
 
     const [place, setPlace] = useState<PlaceDetails | null>(null);
     const [loading, setLoading] = useState(true);
@@ -87,34 +89,34 @@ export default function PlaceDetailScreen() {
 
     if (loading) {
         return (
-            <View style={styles.centerContainer}>
-                <ActivityIndicator size="large" color="#007AFF" />
-                <Text style={styles.loadingText}>Loading place details...</Text>
+            <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+                <ActivityIndicator size="large" color={colors.primary} />
+                <Text style={[styles.loadingText, { color: colors.text }]}>Loading place details...</Text>
             </View>
         );
     }
 
     if (error || !place) {
         return (
-            <View style={styles.centerContainer}>
-                <Text style={styles.errorText}>❌ {error || 'Place not found'}</Text>
-                <Text style={styles.retryText}>Please try again later</Text>
+            <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+                <Text style={[styles.errorText, { color: colors.text }]}>❌ {error || 'Place not found'}</Text>
+                <Text style={[styles.retryText, { color: colors.textSecondary }]}>Please try again later</Text>
             </View>
         );
     }
 
     return (
-        <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-            <Text style={styles.title}>{place.name}</Text>
+        <ScrollView style={[styles.container, { backgroundColor: colors.background }]} showsVerticalScrollIndicator={false}>
+            <Text style={[styles.title, { color: colors.text }]}>{place.name}</Text>
 
             {/* Rating Section */}
             {place.rating && (
                 <View style={styles.ratingSection}>
-                    <View style={styles.ratingContainer}>
+                    <View style={[styles.ratingContainer, { backgroundColor: colors.searchBackground }]}>
                         <Star size={20} color="#FFD700" fill="#FFD700" />
-                        <Text style={styles.rating}>{place.rating}</Text>
+                        <Text style={[styles.rating, { color: colors.text }]}>{place.rating}</Text>
                         {place.user_ratings_total && (
-                            <Text style={styles.ratingCount}>({place.user_ratings_total} reviews)</Text>
+                            <Text style={[styles.ratingCount, { color: colors.textSecondary }]}>({place.user_ratings_total} reviews)</Text>
                         )}
                     </View>
                 </View>
@@ -122,53 +124,53 @@ export default function PlaceDetailScreen() {
 
             {/* Action Buttons */}
             <View style={styles.actionButtons}>
-                <TouchableOpacity style={styles.actionButton} onPress={openMaps}>
-                    <Navigation size={18} color="#007AFF" />
-                    <Text style={styles.actionButtonText}>Directions</Text>
+                <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.searchBackground }]} onPress={openMaps}>
+                    <Navigation size={18} color={colors.primary} />
+                    <Text style={[styles.actionButtonText, { color: colors.primary }]}>Directions</Text>
                 </TouchableOpacity>
 
                 {place.website && (
-                    <TouchableOpacity style={styles.actionButton} onPress={openWebsite}>
-                        <Globe size={18} color="#007AFF" />
-                        <Text style={styles.actionButtonText}>Website</Text>
+                    <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.searchBackground }]} onPress={openWebsite}>
+                        <Globe size={18} color={colors.primary} />
+                        <Text style={[styles.actionButtonText, { color: colors.primary }]}>Website</Text>
                     </TouchableOpacity>
                 )}
 
                 {place.formatted_phone_number && (
-                    <TouchableOpacity style={styles.actionButton} onPress={openPhone}>
-                        <Phone size={18} color="#007AFF" />
-                        <Text style={styles.actionButtonText}>Call</Text>
+                    <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.searchBackground }]} onPress={openPhone}>
+                        <Phone size={18} color={colors.primary} />
+                        <Text style={[styles.actionButtonText, { color: colors.primary }]}>Call</Text>
                     </TouchableOpacity>
                 )}
             </View>
 
             {/* Address */}
             {place.formatted_address && (
-                <View style={styles.section}>
+                <View style={[styles.section, { backgroundColor: colors.card }]}>
                     <View style={styles.sectionHeader}>
-                        <MapPin size={20} color="#666" />
-                        <Text style={styles.sectionTitle}>Address</Text>
+                        <MapPin size={20} color={colors.textSecondary} />
+                        <Text style={[styles.sectionTitle, { color: colors.text }]}>Address</Text>
                     </View>
-                    <Text style={styles.detailText}>{place.formatted_address}</Text>
+                    <Text style={[styles.detailText, { color: colors.text }]}>{place.formatted_address}</Text>
                 </View>
             )}
 
             {/* Contact Information */}
             {(place.formatted_phone_number || place.website) && (
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Contact Information</Text>
+                <View style={[styles.section, { backgroundColor: colors.card }]}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Contact Information</Text>
 
                     {place.formatted_phone_number && (
                         <TouchableOpacity style={styles.contactRow} onPress={openPhone}>
-                            <Phone size={18} color="#007AFF" />
-                            <Text style={[styles.contactText, styles.link]}>{place.formatted_phone_number}</Text>
+                            <Phone size={18} color={colors.primary} />
+                            <Text style={[styles.contactText, styles.link, { color: colors.primary }]}>{place.formatted_phone_number}</Text>
                         </TouchableOpacity>
                     )}
 
                     {place.website && (
                         <TouchableOpacity style={styles.contactRow} onPress={openWebsite}>
-                            <Globe size={18} color="#007AFF" />
-                            <Text style={[styles.contactText, styles.link]} numberOfLines={1}>
+                            <Globe size={18} color={colors.primary} />
+                            <Text style={[styles.contactText, styles.link, { color: colors.primary }]} numberOfLines={1}>
                                 {place.website.replace(/^https?:\/\//, '')}
                             </Text>
                         </TouchableOpacity>
@@ -178,10 +180,10 @@ export default function PlaceDetailScreen() {
 
             {/* Opening Hours */}
             {place.opening_hours && (
-                <View style={styles.section}>
+                <View style={[styles.section, { backgroundColor: colors.card }]}>
                     <View style={styles.sectionHeader}>
-                        <Clock size={20} color="#333" />
-                        <Text style={styles.sectionTitle}>Opening Hours</Text>
+                        <Clock size={20} color={colors.text} />
+                        <Text style={[styles.sectionTitle, { color: colors.text }]}>Opening Hours</Text>
                     </View>
 
                     <View style={[
@@ -194,19 +196,19 @@ export default function PlaceDetailScreen() {
                     </View>
 
                     {place.opening_hours.weekday_text?.map((day: string, index: number) => (
-                        <Text key={index} style={styles.hoursText}>{day}</Text>
+                        <Text key={index} style={[styles.hoursText, { color: colors.text }]}>{day}</Text>
                     ))}
                 </View>
             )}
 
             {/* Place Types */}
             {place.types && place.types.length > 0 && (
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Categories</Text>
+                <View style={[styles.section, { backgroundColor: colors.card }]}>
+                    <Text style={[styles.sectionTitle, { color: colors.text }]}>Categories</Text>
                     <View style={styles.typesContainer}>
                         {place.types.slice(0, 5).map((type: string, index: number) => (
-                            <View key={index} style={styles.typeChip}>
-                                <Text style={styles.typeText}>{type.replace(/_/g, ' ')}</Text>
+                            <View key={index} style={[styles.typeChip, { backgroundColor: colors.searchBackground }]}>
+                                <Text style={[styles.typeText, { color: colors.primary }]}>{type.replace(/_/g, ' ')}</Text>
                             </View>
                         ))}
                     </View>
