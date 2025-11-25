@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {
     View,
     Text,
@@ -7,7 +7,8 @@ import {
     ActivityIndicator,
     RefreshControl,
     ScrollView,
-    SafeAreaView
+    SafeAreaView,
+    TouchableOpacity
 } from 'react-native';
 import MapView, { Marker } from 'react-native-maps';
 import { useLocation } from '../context/LocationContext';
@@ -15,6 +16,7 @@ import SearchHeader from '../components/SearchHeader';
 import NetworkStatus from '../components/NetworkStatus';
 import { useTheme } from '../context/ThemeContext';
 import { mapDarkStyle, mapLightStyle } from '../constants/mapStyles';
+import { Navigation } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
 
@@ -32,9 +34,21 @@ export default function MapScreen() {
     } = useLocation();
 
     const { colors, isDark } = useTheme();
+    const mapRef = useRef<MapView>(null);
 
     const onRefresh = () => {
         refreshLocation();
+    };
+
+    const reCenterMap = () => {
+        if (mapRef.current && currentLocation) {
+            mapRef.current.animateToRegion({
+                latitude: currentLocation.latitude,
+                longitude: currentLocation.longitude,
+                latitudeDelta: 0.0222,
+                longitudeDelta: 0.0121,
+            }, 1000);
+        }
     };
 
     const renderMapContent = () => {
@@ -70,6 +84,7 @@ export default function MapScreen() {
         return (
             <View style={styles.mapContainer}>
                 <MapView
+                    ref={mapRef}
                     style={styles.map}
                     initialRegion={{
                         latitude: currentLocation.latitude,
@@ -79,21 +94,11 @@ export default function MapScreen() {
                     }}
                     customMapStyle={isDark ? mapDarkStyle : []}
                     showsUserLocation={true}
-                    showsMyLocationButton={true}
+                    showsMyLocationButton={false}
                     showsCompass={true}
                     toolbarEnabled={false}
                     key={`map-${isDark ? 'dark' : 'light'}`}
                 >
-                    {/* User location marker */}
-                    <Marker
-                        coordinate={{
-                            latitude: currentLocation.latitude,
-                            longitude: currentLocation.longitude,
-                        }}
-                        title="Your Location"
-                        pinColor={colors.primary}
-                    />
-
                     {/* Nearby places markers */}
                     {places.map((place) => (
                         <Marker
@@ -108,6 +113,15 @@ export default function MapScreen() {
                         />
                     ))}
                 </MapView>
+
+                {/* Re-center Button */}
+                <TouchableOpacity
+                    style={[styles.recenterButton, { backgroundColor: colors.card }]}
+                    onPress={reCenterMap}
+                    activeOpacity={0.7}
+                >
+                    <Navigation size={24} color={colors.primary} />
+                </TouchableOpacity>
 
                 {/* Info overlay */}
                 <View style={[styles.infoOverlay, { backgroundColor: colors.card }]}>
@@ -184,6 +198,24 @@ const styles = StyleSheet.create({
     retryText: {
         textAlign: 'center',
         fontSize: 14,
+    },
+    // Re-center Button Styles
+    recenterButton: {
+        position: 'absolute',
+        bottom: 30,
+        right: 20,
+        width: 50,
+        height: 50,
+        borderRadius: 25,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.1)',
     },
     infoOverlay: {
         position: 'absolute',

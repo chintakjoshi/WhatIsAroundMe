@@ -23,12 +23,14 @@ export interface Place {
     }>;
     opening_hours?: {
         open_now: boolean;
+        weekday_text?: string[];
     };
     user_ratings_total?: number;
     formatted_phone_number?: string;
     website?: string;
     distance?: number;
     formattedDistance?: string;
+    formatted_address?: string;
 }
 
 export interface PlaceCategory {
