@@ -18,7 +18,6 @@ interface LocationContextType {
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
-let searchTimeout: NodeJS.Timeout | null = null;
 
 export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
