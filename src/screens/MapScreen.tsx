@@ -10,12 +10,12 @@ import {
     SafeAreaView,
     TouchableOpacity
 } from 'react-native';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import { useLocation } from '../context/LocationContext';
 import SearchHeader from '../components/SearchHeader';
 import NetworkStatus from '../components/NetworkStatus';
 import { useTheme } from '../context/ThemeContext';
-import { mapDarkStyle, mapLightStyle } from '../constants/mapStyles';
+import { mapDarkStyle } from '../constants/mapStyles';
 import { Navigation } from 'lucide-react-native';
 
 const { width, height } = Dimensions.get('window');
@@ -35,6 +35,7 @@ export default function MapScreen() {
 
     const { colors, isDark } = useTheme();
     const mapRef = useRef<MapView>(null);
+    const [mapType, setMapType] = React.useState<'standard' | 'satellite' | 'hybrid'>('hybrid');
 
     const onRefresh = () => {
         refreshLocation();
@@ -48,6 +49,36 @@ export default function MapScreen() {
                 latitudeDelta: 0.0222,
                 longitudeDelta: 0.0121,
             }, 1000);
+        }
+    };
+
+    const toggleMapType = () => {
+        setMapType(current => {
+            if (current === 'satellite') return 'standard';
+            if (current === 'standard') return 'hybrid';
+            return 'satellite';
+        });
+    };
+
+    const getMapTypeButtonIcon = () => {
+        switch (mapType) {
+            case 'satellite':
+                return '🛰️';
+            case 'hybrid':
+                return '🌆';
+            default:
+                return '🗺️';
+        }
+    };
+
+    const getMapTypeButtonText = () => {
+        switch (mapType) {
+            case 'satellite':
+                return 'Satellite';
+            case 'hybrid':
+                return 'Hybrid';
+            default:
+                return 'Standard';
         }
     };
 
@@ -92,11 +123,16 @@ export default function MapScreen() {
                         latitudeDelta: 0.0222,
                         longitudeDelta: 0.0121,
                     }}
-                    customMapStyle={isDark ? mapDarkStyle : []}
+                    mapType={mapType}
+                    customMapStyle={mapType === 'standard' ? (isDark ? mapDarkStyle : []) : []}
+                    provider={PROVIDER_DEFAULT}
                     showsUserLocation={true}
                     showsMyLocationButton={false}
                     showsCompass={true}
                     toolbarEnabled={false}
+                    showsBuildings={true}
+                    showsTraffic={false}
+                    key={`map-${mapType}-${isDark ? 'dark' : 'light'}`}
                 >
                     {/* Nearby places markers */}
                     {places.map((place) => (
@@ -112,6 +148,20 @@ export default function MapScreen() {
                         />
                     ))}
                 </MapView>
+
+                {/* Map Type Toggle Button */}
+                <TouchableOpacity
+                    style={[styles.mapTypeButton, { backgroundColor: colors.card }]}
+                    onPress={toggleMapType}
+                    activeOpacity={0.7}
+                >
+                    <Text style={[styles.mapTypeIcon, { color: colors.primary }]}>
+                        {getMapTypeButtonIcon()}
+                    </Text>
+                    <Text style={[styles.mapTypeText, { color: colors.text }]}>
+                        {getMapTypeButtonText()}
+                    </Text>
+                </TouchableOpacity>
 
                 {/* Re-center Button */}
                 <TouchableOpacity
@@ -193,6 +243,31 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontSize: 14,
     },
+    mapTypeButton: {
+        position: 'absolute',
+        top: 40,
+        right: 5,
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 6,
+        borderRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 5,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.1)',
+        gap: 6,
+    },
+    mapTypeIcon: {
+        fontSize: 16,
+    },
+    mapTypeText: {
+        fontSize: 14,
+        fontWeight: '600',
+    },
     recenterButton: {
         position: 'absolute',
         bottom: 30,
@@ -212,7 +287,8 @@ const styles = StyleSheet.create({
     },
     infoOverlay: {
         position: 'absolute',
-        top: 16,
+        top: 5,
+        right: 5,
         alignSelf: 'center',
         paddingHorizontal: 16,
         paddingVertical: 8,
@@ -226,6 +302,7 @@ const styles = StyleSheet.create({
     infoText: {
         fontSize: 14,
         fontWeight: '500',
+        textAlign: 'center',
     },
     refreshOverlay: {
         position: 'absolute',
