@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import { Location, Place } from '../types';
 import { LocationService } from '../services/locationService';
 import PlacesService from '../services/placesService';
@@ -27,6 +27,7 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [error, setError] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     const searchPlaces = useCallback(async (searchType?: string | null, searchKeyword?: string) => {
         if (!currentLocation) return;
@@ -114,17 +115,17 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     useEffect(() => {
         if (!currentLocation) return;
 
-        if (searchTimeout) {
-            clearTimeout(searchTimeout);
+        if (searchTimeoutRef.current) {
+            clearTimeout(searchTimeoutRef.current);
         }
 
-        searchTimeout = setTimeout(() => {
+        searchTimeoutRef.current = setTimeout(() => {
             searchPlaces();
         }, 500);
 
         return () => {
-            if (searchTimeout) {
-                clearTimeout(searchTimeout);
+            if (searchTimeoutRef.current) {
+                clearTimeout(searchTimeoutRef.current);
             }
         };
     }, [searchQuery, selectedCategory, currentLocation, searchPlaces]);
