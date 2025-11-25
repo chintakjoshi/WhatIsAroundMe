@@ -90,9 +90,9 @@ export default function SearchHeader({
     };
 
     return (
-        <View style={[styles.container, { backgroundColor: colors.header, borderBottomColor: colors.border }]}>
+        <View style={styles.container}>
             <View style={styles.searchContainer}>
-                <View style={[styles.searchInputContainer, { backgroundColor: colors.searchBackground }]}>
+                <View style={[styles.searchInputContainer, { backgroundColor: 'rgba(255, 255, 255, 0.95)' }]}>
                     <Search size={20} color={colors.textSecondary} />
                     <TextInput
                         style={[styles.searchInput, { color: colors.text }]}
@@ -113,7 +113,7 @@ export default function SearchHeader({
                     <TouchableOpacity
                         style={[
                             styles.filterButton,
-                            { backgroundColor: colors.searchBackground },
+                            { backgroundColor: 'rgba(255, 255, 255, 0.95)' },
                             (showFilters || selectedCategory) && styles.filterButtonActive
                         ]}
                         onPress={() => setShowFilters(!showFilters)}
@@ -125,7 +125,7 @@ export default function SearchHeader({
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.settingsButton, { backgroundColor: colors.searchBackground }]}
+                        style={[styles.settingsButton, { backgroundColor: 'rgba(255, 255, 255, 0.95)' }]}
                         onPress={openSettings}
                     >
                         <Settings size={20} color={colors.textSecondary} />
@@ -156,7 +156,7 @@ export default function SearchHeader({
                                     key={category.id}
                                     style={[
                                         styles.categoryButton,
-                                        { backgroundColor: colors.searchBackground },
+                                        { backgroundColor: 'rgba(255, 255, 255, 0.95)' },
                                         isSelected && [styles.categoryButtonSelected, { backgroundColor: colors.primary }]
                                     ]}
                                     onPress={() => handleCategorySelect(category.type)}
@@ -178,11 +178,13 @@ export default function SearchHeader({
 
             {hasActiveFilters && !showFilters && (
                 <View style={styles.activeFiltersContainer}>
-                    <Text style={[styles.activeFiltersText, { color: colors.primary }]}>
-                        Active filters:
-                        {searchQuery && ` "${searchQuery}"`}
-                        {selectedCategory && ` ${getSelectedCategoryName()}`}
-                    </Text>
+                    <View style={[styles.activeFiltersBadge, { backgroundColor: 'rgba(255, 255, 255, 0.95)' }]}>
+                        <Text style={[styles.activeFiltersText, { color: colors.primary }]}>
+                            Active filters:
+                            {searchQuery && ` "${searchQuery}"`}
+                            {selectedCategory && ` ${getSelectedCategoryName()}`}
+                        </Text>
+                    </View>
                 </View>
             )}
         </View>
@@ -194,12 +196,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingTop: 8,
         paddingBottom: 8,
-        borderBottomWidth: 1,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.1,
-        shadowRadius: 2,
-        elevation: 2,
+        backgroundColor: 'transparent',
     },
     searchContainer: {
         flexDirection: 'row',
@@ -214,6 +211,11 @@ const styles = StyleSheet.create({
         paddingHorizontal: 12,
         paddingVertical: 10,
         gap: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     searchInput: {
         flex: 1,
@@ -226,19 +228,30 @@ const styles = StyleSheet.create({
     filterButton: {
         padding: 10,
         borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     filterButtonActive: {
-        opacity: 0.8,
+        opacity: 1,
     },
     settingsButton: {
         padding: 10,
         borderRadius: 10,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     categoriesContainer: {
         maxHeight: 60,
+        marginTop: 8,
     },
     categoriesContent: {
-        paddingVertical: 8,
+        paddingVertical: 4,
     },
     loadingContainer: {
         flexDirection: 'row',
@@ -246,6 +259,13 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 8,
         gap: 8,
+        backgroundColor: 'rgba(255, 255, 255, 0.95)',
+        borderRadius: 20,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     loadingText: {
         fontSize: 14,
@@ -259,6 +279,11 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         marginRight: 8,
         gap: 6,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     categoryButtonSelected: {
         // Background color handled inline
@@ -272,10 +297,20 @@ const styles = StyleSheet.create({
     },
     activeFiltersContainer: {
         marginTop: 8,
-        paddingVertical: 4,
+        alignItems: 'flex-start',
+    },
+    activeFiltersBadge: {
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+        elevation: 3,
     },
     activeFiltersText: {
         fontSize: 12,
-        fontStyle: 'italic',
+        fontWeight: '500',
     },
 });
