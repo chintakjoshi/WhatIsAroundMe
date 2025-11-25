@@ -66,6 +66,7 @@ WhatsAroundMe/
 │   ├── context/
 │   ├── services/
 │   ├── components/
+│   ├── constants/
 │   └── types/
 │
 ├── App.tsx
