@@ -192,28 +192,40 @@ export default function MapScreen() {
     };
 
     return (
-        <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-            <SearchHeader
-                onSearch={setSearchQuery}
-                onCategoryFilter={setSelectedCategory}
-                searchQuery={searchQuery}
-                selectedCategory={selectedCategory}
-            />
-            <NetworkStatus />
-
-            <View style={styles.contentArea}>
+        <View style={styles.container}>
+            <View style={styles.mapWrapper}>
                 {renderMapContent()}
             </View>
-        </SafeAreaView>
+            
+            {/* Search Header overlaid on top */}
+            <View style={styles.headerOverlay}>
+                <SafeAreaView>
+                    <SearchHeader
+                        onSearch={setSearchQuery}
+                        onCategoryFilter={setSelectedCategory}
+                        searchQuery={searchQuery}
+                        selectedCategory={selectedCategory}
+                    />
+                    <NetworkStatus />
+                </SafeAreaView>
+            </View>
+        </View>
     );
 }
 
 const styles = StyleSheet.create({
-    safeArea: {
+    container: {
         flex: 1,
     },
-    contentArea: {
+    mapWrapper: {
         flex: 1,
+    },
+    headerOverlay: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        zIndex: 10,
     },
     mapContainer: {
         flex: 1,
@@ -245,8 +257,8 @@ const styles = StyleSheet.create({
     },
     mapTypeButton: {
         position: 'absolute',
-        top: 40,
-        right: 5,
+        top: 170,
+        right: 8,
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 16,
@@ -287,40 +299,41 @@ const styles = StyleSheet.create({
     },
     infoOverlay: {
         position: 'absolute',
-        top: 5,
-        right: 5,
+        top: 210,
+        right: 8,
         alignSelf: 'center',
         paddingHorizontal: 16,
-        paddingVertical: 8,
+        paddingVertical: 6,
         borderRadius: 20,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
+        shadowOpacity: 0.3,
         shadowRadius: 4,
-        elevation: 3,
+        elevation: 5,
     },
     infoText: {
         fontSize: 14,
-        fontWeight: '500',
+        fontWeight: '600',
         textAlign: 'center',
     },
     refreshOverlay: {
         position: 'absolute',
-        top: 60,
+        top: 140,
         alignSelf: 'center',
         paddingHorizontal: 20,
-        paddingVertical: 10,
-        borderRadius: 20,
+        paddingVertical: 12,
+        borderRadius: 25,
         flexDirection: 'row',
         alignItems: 'center',
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowOpacity: 0.15,
+        shadowRadius: 8,
         elevation: 3,
     },
     refreshText: {
         marginLeft: 8,
         fontSize: 14,
+        fontWeight: '500',
     },
 });
