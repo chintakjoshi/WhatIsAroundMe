@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { Location, Place } from '../types';
+import { Location, Place, PlaceCategory } from '../types';
 import { LocationService } from '../services/locationService';
 import PlacesService from '../services/placesService';
 
@@ -15,6 +15,9 @@ interface LocationContextType {
     setSearchQuery: (query: string) => void;
     setSelectedCategory: (category: string | null) => void;
     clearFilters: () => void;
+    categories: PlaceCategory[];
+    loadingCategories: boolean;
+    fetchCategories: () => Promise<void>;
 }
 
 const LocationContext = createContext<LocationContextType | undefined>(undefined);
@@ -27,6 +30,8 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
     const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+    const [categories, setCategories] = useState<PlaceCategory[]>([]);
+    const [loadingCategories, setLoadingCategories] = useState(false);
 
     const searchPlaces = useCallback(async (searchType?: string | null, searchKeyword?: string) => {
         if (!currentLocation) return;
@@ -90,6 +95,28 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         }
     }, []);
 
+    const fetchCategories = useCallback(async () => {
+        try {
+            setLoadingCategories(true);
+            const categoriesData = await PlacesService.getPlaceCategories();
+            setCategories(categoriesData);
+        } catch (error) {
+            console.error('Failed to fetch categories:', error);
+            setCategories([
+                { id: 'restaurant', name: 'Restaurants', icon: 'utensils', type: 'restaurant' },
+                { id: 'cafe', name: 'Cafés', icon: 'coffee', type: 'cafe' },
+                { id: 'park', name: 'Parks', icon: 'tree', type: 'park' },
+                { id: 'museum', name: 'Museums', icon: 'landmark', type: 'museum' },
+            ]);
+        } finally {
+            setLoadingCategories(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchCategories();
+    }, [fetchCategories]);
+
     // Initial load - get location first, then places
     useEffect(() => {
         const initializeApp = async () => {
@@ -148,6 +175,9 @@ export const LocationProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 setSearchQuery,
                 setSelectedCategory,
                 clearFilters,
+                categories,
+                loadingCategories,
+                fetchCategories,
             }}
         >
             {children}

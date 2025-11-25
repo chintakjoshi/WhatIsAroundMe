@@ -98,21 +98,20 @@ class PlacesService {
             }
         } catch (error: any) {
             console.error('Error fetching categories:', error);
-            return this.getDefaultCategories();
-        }
-    }
 
-    private getDefaultCategories(): PlaceCategory[] {
-        return [
-            { id: 'restaurant', name: 'Restaurants', icon: 'utensils', type: 'restaurant' },
-            { id: 'cafe', name: 'Cafés', icon: 'coffee', type: 'cafe' },
-            { id: 'park', name: 'Parks', icon: 'tree', type: 'park' },
-            { id: 'museum', name: 'Museums', icon: 'landmark', type: 'museum' },
-            { id: 'bar', name: 'Bars', icon: 'glass', type: 'bar' },
-            { id: 'store', name: 'Stores', icon: 'shopping-bag', type: 'store' },
-            { id: 'gas_station', name: 'Gas Stations', icon: 'fuel', type: 'gas_station' },
-            { id: 'hospital', name: 'Hospitals', icon: 'heart', type: 'hospital' },
-        ];
+            return [
+                { id: 'restaurant', name: 'Restaurants', icon: 'utensils', type: 'restaurant' },
+                { id: 'cafe', name: 'Cafés', icon: 'coffee', type: 'cafe' },
+                { id: 'bar', name: 'Bars', icon: 'glass', type: 'bar' },
+                { id: 'park', name: 'Parks', icon: 'tree', type: 'park' },
+                { id: 'museum', name: 'Museums', icon: 'landmark', type: 'museum' },
+                { id: 'store', name: 'Stores', icon: 'shopping-bag', type: 'store' },
+                { id: 'gas_station', name: 'Gas Stations', icon: 'fuel', type: 'gas_station' },
+                { id: 'hospital', name: 'Hospitals', icon: 'heart', type: 'hospital' },
+                { id: 'pharmacy', name: 'Pharmacies', icon: 'plus', type: 'pharmacy' },
+                { id: 'bank', name: 'Banks', icon: 'dollar-sign', type: 'bank' },
+            ];
+        }
     }
 }
 
