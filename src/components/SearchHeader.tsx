@@ -5,14 +5,28 @@ import {
     StyleSheet,
     TouchableOpacity,
     ScrollView,
-    Text
+    Text,
+    ActivityIndicator
 } from 'react-native';
-
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { Search, Filter, X, Settings } from 'lucide-react-native';
+import { Search, Filter, X, Settings, Utensils, Coffee, Trees, Landmark, Glasses, ShoppingBag, Fuel, Heart, Plus, DollarSign } from 'lucide-react-native';
 import { useTheme } from '../context/ThemeContext';
+import { useLocation } from '../context/LocationContext';
+
+const iconMap: { [key: string]: React.ComponentType<any> } = {
+    utensils: Utensils,
+    coffee: Coffee,
+    tree: Trees,
+    landmark: Landmark,
+    glass: Glasses,
+    'shopping-bag': ShoppingBag,
+    fuel: Fuel,
+    heart: Heart,
+    plus: Plus,
+    'dollar-sign': DollarSign,
+};
 
 interface SearchHeaderProps {
     onSearch: (query: string) => void;
@@ -20,17 +34,6 @@ interface SearchHeaderProps {
     searchQuery: string;
     selectedCategory: string | null;
 }
-
-const categories = [
-    { id: 'restaurant', name: 'Restaurants', icon: '🍽️' },
-    { id: 'cafe', name: 'Cafés', icon: '☕' },
-    { id: 'park', name: 'Parks', icon: '🌳' },
-    { id: 'museum', name: 'Museums', icon: '🏛️' },
-    { id: 'bar', name: 'Bars', icon: '🍸' },
-    { id: 'store', name: 'Stores', icon: '🛍️' },
-    { id: 'gas_station', name: 'Gas', icon: '⛽' },
-    { id: 'pharmacy', name: 'Pharmacy', icon: '💊' },
-];
 
 type SearchHeaderNavigationProp = StackNavigationProp<RootStackParamList, 'MainTabs'>;
 
@@ -42,6 +45,7 @@ export default function SearchHeader({
 }: SearchHeaderProps) {
     const navigation = useNavigation<SearchHeaderNavigationProp>();
     const { colors } = useTheme();
+    const { categories, loadingCategories } = useLocation();
     const [showFilters, setShowFilters] = useState(false);
     const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
@@ -54,8 +58,8 @@ export default function SearchHeader({
         onSearch(text);
     };
 
-    const handleCategorySelect = (categoryId: string) => {
-        const newCategory = selectedCategory === categoryId ? null : categoryId;
+    const handleCategorySelect = (categoryType: string) => {
+        const newCategory = selectedCategory === categoryType ? null : categoryType;
         onCategoryFilter(newCategory);
     };
 
@@ -69,6 +73,20 @@ export default function SearchHeader({
 
     const openSettings = () => {
         navigation.navigate('Settings');
+    };
+
+    const getCategoryIcon = (iconName: string) => {
+        const IconComponent = iconMap[iconName];
+        if (IconComponent) {
+            return <IconComponent size={16} color={colors.textSecondary} />;
+        }
+        return <Utensils size={16} color={colors.textSecondary} />;
+    };
+
+    const getSelectedCategoryName = () => {
+        if (!selectedCategory) return null;
+        const category = categories.find(cat => cat.type === selectedCategory);
+        return category ? category.name : selectedCategory;
     };
 
     return (
@@ -122,26 +140,39 @@ export default function SearchHeader({
                     style={styles.categoriesContainer}
                     contentContainerStyle={styles.categoriesContent}
                 >
-                    {categories.map((category) => (
-                        <TouchableOpacity
-                            key={category.id}
-                            style={[
-                                styles.categoryButton,
-                                { backgroundColor: colors.searchBackground },
-                                selectedCategory === category.id && [styles.categoryButtonSelected, { backgroundColor: colors.primary }]
-                            ]}
-                            onPress={() => handleCategorySelect(category.id)}
-                        >
-                            <Text style={styles.categoryIcon}>{category.icon}</Text>
-                            <Text style={[
-                                styles.categoryText,
-                                { color: colors.textSecondary },
-                                selectedCategory === category.id && styles.categoryTextSelected
-                            ]}>
-                                {category.name}
+                    {loadingCategories ? (
+                        <View style={styles.loadingContainer}>
+                            <ActivityIndicator size="small" color={colors.primary} />
+                            <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
+                                Loading categories...
                             </Text>
-                        </TouchableOpacity>
-                    ))}
+                        </View>
+                    ) : (
+                        categories.map((category) => {
+                            const isSelected = selectedCategory === category.type;
+
+                            return (
+                                <TouchableOpacity
+                                    key={category.id}
+                                    style={[
+                                        styles.categoryButton,
+                                        { backgroundColor: colors.searchBackground },
+                                        isSelected && [styles.categoryButtonSelected, { backgroundColor: colors.primary }]
+                                    ]}
+                                    onPress={() => handleCategorySelect(category.type)}
+                                >
+                                    {getCategoryIcon(category.icon)}
+                                    <Text style={[
+                                        styles.categoryText,
+                                        { color: colors.textSecondary },
+                                        isSelected && styles.categoryTextSelected
+                                    ]}>
+                                        {category.name}
+                                    </Text>
+                                </TouchableOpacity>
+                            );
+                        })
+                    )}
                 </ScrollView>
             )}
 
@@ -150,7 +181,7 @@ export default function SearchHeader({
                     <Text style={[styles.activeFiltersText, { color: colors.primary }]}>
                         Active filters:
                         {searchQuery && ` "${searchQuery}"`}
-                        {selectedCategory && ` ${categories.find(c => c.id === selectedCategory)?.name}`}
+                        {selectedCategory && ` ${getSelectedCategoryName()}`}
                     </Text>
                 </View>
             )}
@@ -209,6 +240,17 @@ const styles = StyleSheet.create({
     categoriesContent: {
         paddingVertical: 8,
     },
+    loadingContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        gap: 8,
+    },
+    loadingText: {
+        fontSize: 14,
+        marginLeft: 8,
+    },
     categoryButton: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -219,9 +261,7 @@ const styles = StyleSheet.create({
         gap: 6,
     },
     categoryButtonSelected: {
-    },
-    categoryIcon: {
-        fontSize: 16,
+        // Background color handled inline
     },
     categoryText: {
         fontSize: 14,
