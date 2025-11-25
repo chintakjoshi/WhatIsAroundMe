@@ -44,7 +44,7 @@ export default function SearchHeader({
     selectedCategory
 }: SearchHeaderProps) {
     const navigation = useNavigation<SearchHeaderNavigationProp>();
-    const { colors } = useTheme();
+    const { colors, isDark } = useTheme();
     const { categories, loadingCategories } = useLocation();
     const [showFilters, setShowFilters] = useState(false);
     const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
@@ -89,10 +89,12 @@ export default function SearchHeader({
         return category ? category.name : selectedCategory;
     };
 
+    const containerBgColor = isDark ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)';
+
     return (
         <View style={styles.container}>
             <View style={styles.searchContainer}>
-                <View style={[styles.searchInputContainer, { backgroundColor: 'rgba(255, 255, 255, 0.95)' }]}>
+                <View style={[styles.searchInputContainer, { backgroundColor: containerBgColor }]}>
                     <Search size={20} color={colors.textSecondary} />
                     <TextInput
                         style={[styles.searchInput, { color: colors.text }]}
@@ -113,7 +115,7 @@ export default function SearchHeader({
                     <TouchableOpacity
                         style={[
                             styles.filterButton,
-                            { backgroundColor: 'rgba(255, 255, 255, 0.95)' },
+                            { backgroundColor: containerBgColor },
                             (showFilters || selectedCategory) && styles.filterButtonActive
                         ]}
                         onPress={() => setShowFilters(!showFilters)}
@@ -125,7 +127,7 @@ export default function SearchHeader({
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={[styles.settingsButton, { backgroundColor: 'rgba(255, 255, 255, 0.95)' }]}
+                        style={[styles.settingsButton, { backgroundColor: containerBgColor }]}
                         onPress={openSettings}
                     >
                         <Settings size={20} color={colors.textSecondary} />
@@ -141,7 +143,7 @@ export default function SearchHeader({
                     contentContainerStyle={styles.categoriesContent}
                 >
                     {loadingCategories ? (
-                        <View style={styles.loadingContainer}>
+                        <View style={[styles.loadingContainer, { backgroundColor: containerBgColor }]}>
                             <ActivityIndicator size="small" color={colors.primary} />
                             <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
                                 Loading categories...
@@ -156,12 +158,15 @@ export default function SearchHeader({
                                     key={category.id}
                                     style={[
                                         styles.categoryButton,
-                                        { backgroundColor: 'rgba(255, 255, 255, 0.95)' },
+                                        { backgroundColor: containerBgColor },
                                         isSelected && [styles.categoryButtonSelected, { backgroundColor: colors.primary }]
                                     ]}
                                     onPress={() => handleCategorySelect(category.type)}
                                 >
-                                    {getCategoryIcon(category.icon)}
+                                    {(() => {
+                                        const IconComponent = iconMap[category.icon] || Utensils;
+                                        return <IconComponent size={16} color={isSelected ? 'white' : colors.textSecondary} />;
+                                    })()}
                                     <Text style={[
                                         styles.categoryText,
                                         { color: colors.textSecondary },
@@ -178,7 +183,7 @@ export default function SearchHeader({
 
             {hasActiveFilters && !showFilters && (
                 <View style={styles.activeFiltersContainer}>
-                    <View style={[styles.activeFiltersBadge, { backgroundColor: 'rgba(255, 255, 255, 0.95)' }]}>
+                    <View style={[styles.activeFiltersBadge, { backgroundColor: containerBgColor }]}>
                         <Text style={[styles.activeFiltersText, { color: colors.primary }]}>
                             Active filters:
                             {searchQuery && ` "${searchQuery}"`}
@@ -259,7 +264,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 8,
         gap: 8,
-        backgroundColor: 'rgba(255, 255, 255, 0.95)',
         borderRadius: 20,
         shadowColor: '#000',
         shadowOffset: { width: 0, height: 2 },
