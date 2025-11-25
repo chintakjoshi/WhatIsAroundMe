@@ -1,4 +1,3 @@
-// src/services/placesService.ts
 import axios from 'axios';
 import { API_URL } from '@env';
 import { Place, PlaceCategory } from '../types';
