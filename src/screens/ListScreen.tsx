@@ -29,6 +29,23 @@ const EmptyComponent = () => {
     );
 };
 
+const LoadingComponent = () => {
+    const { colors } = useTheme();
+    const { searchQuery, selectedCategory } = useLocation();
+
+    return (
+        <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
+            <ActivityIndicator size="large" color={colors.primary} />
+            <Text style={[styles.loadingText, { color: colors.text }]}>
+                {searchQuery || selectedCategory
+                    ? `Searching for ${searchQuery || selectedCategory}...`
+                    : 'Finding places near you...'
+                }
+            </Text>
+        </View>
+    );
+};
+
 type ListScreenNavigationProp = StackNavigationProp<RootStackParamList, 'MainTabs'>;
 
 export default function ListScreen() {
@@ -44,8 +61,6 @@ export default function ListScreen() {
         setSelectedCategory
     } = useLocation();
 
-    const showInitialLoading = loading && places.length === 0;
-
     const onRefresh = () => {
         refreshLocation();
     };
@@ -54,21 +69,7 @@ export default function ListScreen() {
         navigation.navigate('PlaceDetail', { placeId });
     };
 
-    if (showInitialLoading) {
-        return (
-            <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-                <View style={styles.centerContainer}>
-                    <ActivityIndicator size="large" color={colors.primary} />
-                    <Text style={[styles.loadingText, { color: colors.text }]}>
-                        {searchQuery || selectedCategory
-                            ? `Searching for ${searchQuery || selectedCategory}...`
-                            : 'Finding places near you...'
-                        }
-                    </Text>
-                </View>
-            </SafeAreaView>
-        );
-    }
+    const showInitialLoading = loading && places.length === 0;
 
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
@@ -80,7 +81,6 @@ export default function ListScreen() {
             />
             <NetworkStatus />
 
-            {/* Show search loading overlay */}
             {loading && places.length > 0 && (
                 <View style={[styles.searchLoadingOverlay, { backgroundColor: colors.card }]}>
                     <ActivityIndicator size="small" color={colors.primary} />
@@ -89,39 +89,45 @@ export default function ListScreen() {
             )}
 
             <View style={[styles.container, { backgroundColor: colors.background }]}>
-                <View style={styles.header}>
-                    <Text style={[styles.title, { color: colors.text }]}>Nearby Places</Text>
-                    <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
-                        {places.length > 0
-                            ? `Found ${places.length} places`
-                            : 'No places found'
-                        }
-                        {(searchQuery || selectedCategory) && ' with current filters'}
-                    </Text>
-                </View>
+                {(places.length > 0 || searchQuery || selectedCategory) && (
+                    <View style={styles.header}>
+                        <Text style={[styles.title, { color: colors.text }]}>Nearby Places</Text>
+                        <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
+                            {places.length > 0
+                                ? `Found ${places.length} places`
+                                : 'No places found'
+                            }
+                            {(searchQuery || selectedCategory) && ' with current filters'}
+                        </Text>
+                    </View>
+                )}
 
-                <FlatList
-                    data={places}
-                    keyExtractor={(item) => item.id}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={loading && places.length > 0}
-                            onRefresh={onRefresh}
-                            tintColor={colors.primary}
-                            colors={[colors.primary]}
-                        />
-                    }
-                    renderItem={({ item, index }) => (
-                        <PlaceCard
-                            place={item}
-                            onPress={() => handlePlacePress(item.id)}
-                            showActions={true}
-                        />
-                    )}
-                    contentContainerStyle={styles.listContent}
-                    ListEmptyComponent={places.length === 0 && !loading ? EmptyComponent : undefined}
-                    showsVerticalScrollIndicator={false}
-                />
+                {showInitialLoading ? (
+                    <LoadingComponent />
+                ) : (
+                    <FlatList
+                        data={places}
+                        keyExtractor={(item) => item.id}
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={loading && places.length > 0}
+                                onRefresh={onRefresh}
+                                tintColor={colors.primary}
+                                colors={[colors.primary]}
+                            />
+                        }
+                        renderItem={({ item, index }) => (
+                            <PlaceCard
+                                place={item}
+                                onPress={() => handlePlacePress(item.id)}
+                                showActions={true}
+                            />
+                        )}
+                        contentContainerStyle={styles.listContent}
+                        ListEmptyComponent={places.length === 0 && !loading ? EmptyComponent : undefined}
+                        showsVerticalScrollIndicator={false}
+                    />
+                )}
             </View>
         </SafeAreaView>
     );

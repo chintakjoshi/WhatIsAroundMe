@@ -54,7 +54,7 @@ export default function MapScreen() {
     const renderMapContent = () => {
         if (loading && !currentLocation) {
             return (
-                <View style={styles.centerContainer}>
+                <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
                     <ActivityIndicator size="large" color={colors.primary} />
                     <Text style={[styles.loadingText, { color: colors.text }]}>Getting your location...</Text>
                 </View>
@@ -97,7 +97,6 @@ export default function MapScreen() {
                     showsMyLocationButton={false}
                     showsCompass={true}
                     toolbarEnabled={false}
-                    key={`map-${isDark ? 'dark' : 'light'}`}
                 >
                     {/* Nearby places markers */}
                     {places.map((place) => (
@@ -144,18 +143,16 @@ export default function MapScreen() {
 
     return (
         <SafeAreaView style={[styles.safeArea, { backgroundColor: colors.background }]}>
-            <View style={styles.container}>
-                <SearchHeader
-                    onSearch={setSearchQuery}
-                    onCategoryFilter={setSelectedCategory}
-                    searchQuery={searchQuery}
-                    selectedCategory={selectedCategory}
-                />
-                <NetworkStatus />
+            <SearchHeader
+                onSearch={setSearchQuery}
+                onCategoryFilter={setSelectedCategory}
+                searchQuery={searchQuery}
+                selectedCategory={selectedCategory}
+            />
+            <NetworkStatus />
 
-                <View style={styles.contentArea}>
-                    {renderMapContent()}
-                </View>
+            <View style={styles.contentArea}>
+                {renderMapContent()}
             </View>
         </SafeAreaView>
     );
@@ -163,9 +160,6 @@ export default function MapScreen() {
 
 const styles = StyleSheet.create({
     safeArea: {
-        flex: 1,
-    },
-    container: {
         flex: 1,
     },
     contentArea: {
@@ -199,7 +193,6 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontSize: 14,
     },
-    // Re-center Button Styles
     recenterButton: {
         position: 'absolute',
         bottom: 30,
