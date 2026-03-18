@@ -92,20 +92,38 @@ CORS_ORIGIN=http://localhost:3000,exp://192.168.*.*:8081
 
 ## Running the Project
 
-### 1. Start Backend
+### Option 1: Start the Full App (Recommended)
+Run this from the project root:
+
+```
+npm install
+npm run dev
+```
+
+This starts both:
+- the Express backend on port `3001`
+- the Expo development server for the mobile app
+
+You do **not** need to run `npm run dev` inside `server/` as well.
+
+### Option 2: Start Only the Backend
+Use this only when you want to run the API by itself:
+
 ```
 cd server
 npm install
 npm run dev
 ```
 
-### 2. Start Mobile App
+### Option 3: Start Only the Expo App
+Use this only when you want to run the mobile app without starting the backend command from the root script:
+
 ```
 npm install
-npm run dev
+npm start
 ```
 
-Open the Expo Go app on iOS and scan the QR code. Ensure backend IP matches your LAN network IP.
+If you are using Expo Go, make sure `API_URL` in the root `.env` points to your computer's LAN IP, for example `http://192.168.x.x:3001/api`.
 
 ## API Endpoints
 
