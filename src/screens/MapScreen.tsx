@@ -7,10 +7,10 @@ import {
     ActivityIndicator,
     RefreshControl,
     ScrollView,
-    SafeAreaView,
     TouchableOpacity
 } from 'react-native';
 import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useLocation } from '../context/LocationContext';
 import SearchHeader from '../components/SearchHeader';
 import NetworkStatus from '../components/NetworkStatus';

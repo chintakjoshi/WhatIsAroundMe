@@ -5,11 +5,11 @@ import {
     StyleSheet,
     FlatList,
     RefreshControl,
-    SafeAreaView,
     ActivityIndicator
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { useLocation } from '../context/LocationContext';
 import SearchHeader from '../components/SearchHeader';

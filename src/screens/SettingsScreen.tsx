@@ -5,8 +5,8 @@ import {
     StyleSheet,
     ScrollView,
     TouchableOpacity,
-    SafeAreaView,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTheme } from '../context/ThemeContext';
 import { ChevronLeft, Check, Moon, Sun, Smartphone } from 'lucide-react-native';
 

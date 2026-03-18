@@ -15,17 +15,17 @@ app.use(cors({
     origin: function (origin, callback) {
         // Allowing requests with no origin
         if (!origin) return callback(null, true);
-        
+
         // Allowing all Expo development origins
         if (
-            origin.includes('exp://') || 
+            origin.includes('exp://') ||
             origin.includes('localhost:') ||
             origin.includes('192.168.') ||
             origin.includes('127.0.0.1:')
         ) {
             return callback(null, true);
         }
-        
+
         return callback(new Error('Not allowed by CORS'), false);
     },
     methods: ['GET', 'POST'],
@@ -58,9 +58,19 @@ app.use('*', (req, res) => {
     });
 });
 
-app.listen(PORT, '0.0.0.0', () => {
-    console.log(`🚀 Server running on port ${PORT}`);
-    console.log(`📱 Environment: ${process.env.NODE_ENV}`);
-    console.log(`🌐 Accessible at: http://localhost:${PORT}`);
-    console.log(`🔗 Health check: http://localhost:${PORT}/health`);
+const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Server running on port ${PORT}`);
+    console.log(`Environment: ${process.env.NODE_ENV}`);
+    console.log(`Accessible at: http://localhost:${PORT}`);
+    console.log(`Health check: http://localhost:${PORT}/health`);
+});
+
+server.on('error', (error) => {
+    if (error.code === 'EADDRINUSE') {
+        console.error(`Port ${PORT} is already in use.`);
+        console.error('Stop the other backend process or change PORT in server/.env.');
+        process.exit(1);
+    }
+
+    throw error;
 });
