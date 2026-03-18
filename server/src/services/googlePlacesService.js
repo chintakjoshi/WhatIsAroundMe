@@ -22,10 +22,10 @@ class GooglePlacesService {
                 timeout: 10000,
             });
 
-            if (response.data.status === 'OK') {
+            if (response.data.status === 'OK' || response.data.status === 'ZERO_RESULTS') {
                 return {
                     success: true,
-                    data: response.data.results,
+                    data: response.data.results || [],
                     nextPageToken: response.data.next_page_token,
                 };
             } else {

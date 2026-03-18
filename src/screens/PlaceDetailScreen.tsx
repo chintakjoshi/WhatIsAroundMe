@@ -12,6 +12,7 @@ import { useRoute } from '@react-navigation/native';
 import { Star, MapPin, Phone, Globe, Clock, Navigation } from 'lucide-react-native';
 import PlacesService from '../services/placesService';
 import { useTheme } from '../context/ThemeContext';
+import { openDirectionsForLocation } from '../utils/maps';
 
 interface PlaceDetails {
     id: string;
@@ -79,11 +80,7 @@ export default function PlaceDetailScreen() {
 
     const openMaps = () => {
         if (place?.geometry?.location) {
-            const { lat, lng } = place.geometry.location;
-            const url = `https://maps.apple.com/?q=${lat},${lng}&z=15&t=m`;
-            Linking.openURL(url).catch(err =>
-                console.error('Error opening maps:', err)
-            );
+            openDirectionsForLocation(place.geometry.location);
         }
     };
 
@@ -99,7 +96,7 @@ export default function PlaceDetailScreen() {
     if (error || !place) {
         return (
             <View style={[styles.centerContainer, { backgroundColor: colors.background }]}>
-                <Text style={[styles.errorText, { color: colors.text }]}>❌ {error || 'Place not found'}</Text>
+                <Text style={[styles.errorText, { color: colors.text }]}>{error || 'Place not found'}</Text>
                 <Text style={[styles.retryText, { color: colors.textSecondary }]}>Please try again later</Text>
             </View>
         );
@@ -109,8 +106,7 @@ export default function PlaceDetailScreen() {
         <ScrollView style={[styles.container, { backgroundColor: colors.background }]} showsVerticalScrollIndicator={false}>
             <Text style={[styles.title, { color: colors.text }]}>{place.name}</Text>
 
-            {/* Rating Section */}
-            {place.rating && (
+            {place.rating !== undefined && (
                 <View style={styles.ratingSection}>
                     <View style={[styles.ratingContainer, { backgroundColor: colors.searchBackground }]}>
                         <Star size={20} color="#FFD700" fill="#FFD700" />
@@ -122,7 +118,6 @@ export default function PlaceDetailScreen() {
                 </View>
             )}
 
-            {/* Action Buttons */}
             <View style={styles.actionButtons}>
                 <TouchableOpacity style={[styles.actionButton, { backgroundColor: colors.searchBackground }]} onPress={openMaps}>
                     <Navigation size={18} color={colors.primary} />
@@ -144,7 +139,6 @@ export default function PlaceDetailScreen() {
                 )}
             </View>
 
-            {/* Address */}
             {place.formatted_address && (
                 <View style={[styles.section, { backgroundColor: colors.card }]}>
                     <View style={styles.sectionHeader}>
@@ -155,7 +149,6 @@ export default function PlaceDetailScreen() {
                 </View>
             )}
 
-            {/* Contact Information */}
             {(place.formatted_phone_number || place.website) && (
                 <View style={[styles.section, { backgroundColor: colors.card }]}>
                     <Text style={[styles.sectionTitle, { color: colors.text }]}>Contact Information</Text>
@@ -178,7 +171,6 @@ export default function PlaceDetailScreen() {
                 </View>
             )}
 
-            {/* Opening Hours */}
             {place.opening_hours && (
                 <View style={[styles.section, { backgroundColor: colors.card }]}>
                     <View style={styles.sectionHeader}>
@@ -191,7 +183,7 @@ export default function PlaceDetailScreen() {
                         place.opening_hours.open_now ? styles.openBadge : styles.closedBadge
                     ]}>
                         <Text style={styles.statusText}>
-                            {place.opening_hours.open_now ? '🟢 Open Now' : '🔴 Closed'}
+                            {place.opening_hours.open_now ? 'Open Now' : 'Closed'}
                         </Text>
                     </View>
 
@@ -201,7 +193,6 @@ export default function PlaceDetailScreen() {
                 </View>
             )}
 
-            {/* Place Types */}
             {place.types && place.types.length > 0 && (
                 <View style={[styles.section, { backgroundColor: colors.card }]}>
                     <Text style={[styles.sectionTitle, { color: colors.text }]}>Categories</Text>

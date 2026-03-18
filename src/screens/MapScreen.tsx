@@ -3,7 +3,6 @@ import {
     View,
     Text,
     StyleSheet,
-    Dimensions,
     ActivityIndicator,
     RefreshControl,
     ScrollView,
@@ -11,14 +10,12 @@ import {
 } from 'react-native';
 import MapView, { Marker, PROVIDER_DEFAULT } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { Navigation } from 'lucide-react-native';
 import { useLocation } from '../context/LocationContext';
 import SearchHeader from '../components/SearchHeader';
 import NetworkStatus from '../components/NetworkStatus';
 import { useTheme } from '../context/ThemeContext';
 import { mapDarkStyle } from '../constants/mapStyles';
-import { Navigation } from 'lucide-react-native';
-
-const { width, height } = Dimensions.get('window');
 
 export default function MapScreen() {
     const {
@@ -60,25 +57,14 @@ export default function MapScreen() {
         });
     };
 
-    const getMapTypeButtonIcon = () => {
+    const getMapTypeButtonLabel = () => {
         switch (mapType) {
             case 'satellite':
-                return '🛰️';
+                return 'Map: Satellite';
             case 'hybrid':
-                return '🌆';
+                return 'Map: Hybrid';
             default:
-                return '🗺️';
-        }
-    };
-
-    const getMapTypeButtonText = () => {
-        switch (mapType) {
-            case 'satellite':
-                return 'Satellite';
-            case 'hybrid':
-                return 'Hybrid';
-            default:
-                return 'Standard';
+                return 'Map: Standard';
         }
     };
 
@@ -95,14 +81,14 @@ export default function MapScreen() {
         if (error || !currentLocation) {
             return (
                 <ScrollView
-                    contentContainerStyle={styles.centerContainer}
-                    refreshControl={
+                    contentContainerStyle={styles.centerScrollContent}
+                    refreshControl={(
                         <RefreshControl
                             refreshing={loading}
                             onRefresh={onRefresh}
                             tintColor={colors.primary}
                         />
-                    }
+                    )}
                 >
                     <Text style={[styles.error, { color: colors.text }]}>
                         {error || 'Unable to get your location'}
@@ -134,7 +120,6 @@ export default function MapScreen() {
                     showsTraffic={false}
                     key={`map-${mapType}-${isDark ? 'dark' : 'light'}`}
                 >
-                    {/* Nearby places markers */}
                     {places.map((place) => (
                         <Marker
                             key={place.id}
@@ -149,21 +134,25 @@ export default function MapScreen() {
                     ))}
                 </MapView>
 
-                {/* Map Type Toggle Button */}
-                <TouchableOpacity
-                    style={[styles.mapTypeButton, { backgroundColor: colors.card }]}
-                    onPress={toggleMapType}
-                    activeOpacity={0.7}
-                >
-                    <Text style={[styles.mapTypeIcon, { color: colors.primary }]}>
-                        {getMapTypeButtonIcon()}
-                    </Text>
-                    <Text style={[styles.mapTypeText, { color: colors.text }]}>
-                        {getMapTypeButtonText()}
-                    </Text>
-                </TouchableOpacity>
+                <View style={styles.topRightControls}>
+                    <TouchableOpacity
+                        style={[styles.mapTypeButton, { backgroundColor: colors.card }]}
+                        onPress={toggleMapType}
+                        activeOpacity={0.7}
+                    >
+                        <Text style={[styles.mapTypeText, { color: colors.text }]}>
+                            {getMapTypeButtonLabel()}
+                        </Text>
+                    </TouchableOpacity>
 
-                {/* Re-center Button */}
+                    <View style={[styles.infoOverlay, { backgroundColor: colors.card }]}>
+                        <Text style={[styles.infoText, { color: colors.text }]}>
+                            {places.length} places found
+                            {(searchQuery || selectedCategory) && ' with current filters'}
+                        </Text>
+                    </View>
+                </View>
+
                 <TouchableOpacity
                     style={[styles.recenterButton, { backgroundColor: colors.card }]}
                     onPress={reCenterMap}
@@ -172,15 +161,6 @@ export default function MapScreen() {
                     <Navigation size={24} color={colors.primary} />
                 </TouchableOpacity>
 
-                {/* Info overlay */}
-                <View style={[styles.infoOverlay, { backgroundColor: colors.card }]}>
-                    <Text style={[styles.infoText, { color: colors.text }]}>
-                        📍 {places.length} places found
-                        {(searchQuery || selectedCategory) && ' with current filters'}
-                    </Text>
-                </View>
-
-                {/* Loading overlay when refreshing with existing data */}
                 {loading && (
                     <View style={[styles.refreshOverlay, { backgroundColor: colors.card }]}>
                         <ActivityIndicator size="small" color={colors.primary} />
@@ -192,24 +172,21 @@ export default function MapScreen() {
     };
 
     return (
-        <View style={styles.container}>
+        <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={['top']}>
+            <View style={styles.headerContainer}>
+                <SearchHeader
+                    onSearch={setSearchQuery}
+                    onCategoryFilter={setSelectedCategory}
+                    searchQuery={searchQuery}
+                    selectedCategory={selectedCategory}
+                />
+                <NetworkStatus />
+            </View>
+
             <View style={styles.mapWrapper}>
                 {renderMapContent()}
             </View>
-            
-            {/* Search Header overlaid on top */}
-            <View style={styles.headerOverlay}>
-                <SafeAreaView>
-                    <SearchHeader
-                        onSearch={setSearchQuery}
-                        onCategoryFilter={setSelectedCategory}
-                        searchQuery={searchQuery}
-                        selectedCategory={selectedCategory}
-                    />
-                    <NetworkStatus />
-                </SafeAreaView>
-            </View>
-        </View>
+        </SafeAreaView>
     );
 }
 
@@ -217,26 +194,27 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
     },
+    headerContainer: {
+        zIndex: 1,
+    },
     mapWrapper: {
         flex: 1,
-    },
-    headerOverlay: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 10,
     },
     mapContainer: {
         flex: 1,
         position: 'relative',
     },
     map: {
-        width: width,
-        height: height,
+        ...StyleSheet.absoluteFillObject,
     },
     centerContainer: {
         flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        padding: 20,
+    },
+    centerScrollContent: {
+        flexGrow: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
@@ -255,10 +233,14 @@ const styles = StyleSheet.create({
         textAlign: 'center',
         fontSize: 14,
     },
-    mapTypeButton: {
+    topRightControls: {
         position: 'absolute',
-        top: 170,
-        right: 8,
+        top: 16,
+        right: 12,
+        alignItems: 'flex-end',
+        gap: 10,
+    },
+    mapTypeButton: {
         flexDirection: 'row',
         alignItems: 'center',
         paddingHorizontal: 16,
@@ -271,10 +253,6 @@ const styles = StyleSheet.create({
         elevation: 5,
         borderWidth: 1,
         borderColor: 'rgba(0,0,0,0.1)',
-        gap: 6,
-    },
-    mapTypeIcon: {
-        fontSize: 16,
     },
     mapTypeText: {
         fontSize: 14,
@@ -282,8 +260,8 @@ const styles = StyleSheet.create({
     },
     recenterButton: {
         position: 'absolute',
-        bottom: 30,
-        right: 20,
+        bottom: 24,
+        right: 16,
         width: 50,
         height: 50,
         borderRadius: 25,
@@ -298,10 +276,7 @@ const styles = StyleSheet.create({
         borderColor: 'rgba(0,0,0,0.1)',
     },
     infoOverlay: {
-        position: 'absolute',
-        top: 210,
-        right: 8,
-        alignSelf: 'center',
+        maxWidth: 220,
         paddingHorizontal: 16,
         paddingVertical: 6,
         borderRadius: 20,
@@ -318,7 +293,7 @@ const styles = StyleSheet.create({
     },
     refreshOverlay: {
         position: 'absolute',
-        top: 140,
+        top: 16,
         alignSelf: 'center',
         paddingHorizontal: 20,
         paddingVertical: 12,
