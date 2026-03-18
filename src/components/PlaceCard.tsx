@@ -5,13 +5,13 @@ import {
     StyleSheet,
     TouchableOpacity,
     Image,
-    Linking,
-    Alert
+    Linking
 } from 'react-native';
-import { Navigation, Phone, Globe, MapPin } from 'lucide-react-native';
+import { Navigation, Phone, Globe, MapPin, Star } from 'lucide-react-native';
 import { Place } from '../types';
 import PlacesService from '../services/placesService';
 import { useTheme } from '../context/ThemeContext';
+import { openDirectionsForLocation } from '../utils/maps';
 
 interface PlaceCardProps {
     place: Place;
@@ -24,32 +24,39 @@ export default function PlaceCard({ place, onPress, showActions = true }: PlaceC
     const [imageUrl, setImageUrl] = useState<string | null>(null);
     const [imageLoading, setImageLoading] = useState(false);
 
-    // Load place image if available
     useEffect(() => {
+        let isMounted = true;
+
         const loadPlaceImage = async () => {
-            if (place.photos && place.photos.length > 0) {
-                try {
-                    setImageLoading(true);
-                    const photoUrl = await PlacesService.getPlacePhoto(place.photos[0].photo_reference);
+            if (!place.photos || place.photos.length === 0) {
+                return;
+            }
+
+            try {
+                setImageLoading(true);
+                const photoUrl = await PlacesService.getPlacePhoto(place.photos[0].photo_reference);
+                if (isMounted) {
                     setImageUrl(photoUrl);
-                } catch (error) {
-                    console.error('Error loading place image:', error);
-                } finally {
+                }
+            } catch (error) {
+                console.error('Error loading place image:', error);
+            } finally {
+                if (isMounted) {
                     setImageLoading(false);
                 }
             }
         };
 
         loadPlaceImage();
+
+        return () => {
+            isMounted = false;
+        };
     }, [place.photos]);
 
     const openDirections = () => {
         if (place.geometry?.location) {
-            const { lat, lng } = place.geometry.location;
-            const url = `https://maps.apple.com/?q=${lat},${lng}&dirflg=w`; // Walking directions
-            Linking.openURL(url).catch(err =>
-                console.error('Error opening maps:', err)
-            );
+            openDirectionsForLocation(place.geometry.location);
         }
     };
 
@@ -65,35 +72,12 @@ export default function PlaceCard({ place, onPress, showActions = true }: PlaceC
         }
     };
 
-    const handleActionPress = (action: string) => {
-        switch (action) {
-            case 'directions':
-                openDirections();
-                break;
-            case 'phone':
-                if (place.formatted_phone_number) {
-                    openPhone();
-                } else {
-                    Alert.alert('Phone number not available');
-                }
-                break;
-            case 'website':
-                if (place.website) {
-                    openWebsite();
-                } else {
-                    Alert.alert('Website not available');
-                }
-                break;
-        }
-    };
-
     return (
         <TouchableOpacity
             style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={onPress}
             activeOpacity={0.7}
         >
-            {/* Place Image */}
             {imageUrl && !imageLoading && (
                 <Image
                     source={{ uri: imageUrl }}
@@ -102,7 +86,6 @@ export default function PlaceCard({ place, onPress, showActions = true }: PlaceC
                 />
             )}
 
-            {/* Image Loading Placeholder */}
             {imageLoading && (
                 <View style={[styles.image, styles.imagePlaceholder, { backgroundColor: colors.searchBackground }]}>
                     <Text style={[styles.placeholderText, { color: colors.textSecondary }]}>Loading image...</Text>
@@ -110,7 +93,6 @@ export default function PlaceCard({ place, onPress, showActions = true }: PlaceC
             )}
 
             <View style={styles.content}>
-                {/* Header Row */}
                 <View style={styles.header}>
                     <Text style={[styles.name, { color: colors.text }]} numberOfLines={2}>{place.name}</Text>
                     {place.formattedDistance && (
@@ -118,7 +100,6 @@ export default function PlaceCard({ place, onPress, showActions = true }: PlaceC
                     )}
                 </View>
 
-                {/* Address */}
                 {place.vicinity && (
                     <View style={styles.addressRow}>
                         <MapPin size={14} color={colors.textSecondary} />
@@ -126,74 +107,62 @@ export default function PlaceCard({ place, onPress, showActions = true }: PlaceC
                     </View>
                 )}
 
-                {/* Details Row */}
                 <View style={styles.detailsRow}>
-                    {/* Rating */}
                     {(place.rating || place.rating === 0) && (
                         <View style={[styles.ratingContainer, { backgroundColor: colors.searchBackground }]}>
-                            <Text style={styles.rating}>⭐ {place.rating}</Text>
+                            <Star size={12} color="#e6b400" fill="#e6b400" />
+                            <Text style={styles.rating}>{place.rating}</Text>
                             {place.user_ratings_total && (
                                 <Text style={styles.ratingCount}>({place.user_ratings_total})</Text>
                             )}
                         </View>
                     )}
 
-                    {/* Types */}
                     {place.types && place.types.length > 0 && (
                         <Text style={[styles.types, { color: colors.textSecondary }]} numberOfLines={1}>
-                            {place.types.slice(0, 2).join(' • ')}
+                            {place.types.slice(0, 2).join(' | ')}
                         </Text>
                     )}
                 </View>
 
-                {/* Opening Status */}
                 {place.opening_hours && (
                     <Text style={[
                         styles.openStatus,
                         place.opening_hours.open_now ? styles.open : styles.closed
                     ]}>
-                        {place.opening_hours.open_now ? '🟢 Open Now' : '🔴 Closed'}
+                        {place.opening_hours.open_now ? 'Open Now' : 'Closed'}
                     </Text>
                 )}
 
-                {/* Quick Actions */}
                 {showActions && (
                     <View style={[styles.actions, { borderTopColor: colors.border }]}>
                         <TouchableOpacity
                             style={styles.actionButton}
-                            onPress={() => handleActionPress('directions')}
+                            onPress={openDirections}
                         >
                             <Navigation size={16} color={colors.primary} />
                             <Text style={[styles.actionText, { color: colors.primary }]}>Directions</Text>
                         </TouchableOpacity>
 
-                        <TouchableOpacity
-                            style={styles.actionButton}
-                            onPress={() => handleActionPress('phone')}
-                            disabled={!place.formatted_phone_number}
-                        >
-                            <Phone size={16} color={place.formatted_phone_number ? colors.primary : colors.textSecondary} />
-                            <Text style={[
-                                styles.actionText,
-                                { color: place.formatted_phone_number ? colors.primary : colors.textSecondary }
-                            ]}>
-                                Call
-                            </Text>
-                        </TouchableOpacity>
+                        {place.formatted_phone_number && (
+                            <TouchableOpacity
+                                style={styles.actionButton}
+                                onPress={openPhone}
+                            >
+                                <Phone size={16} color={colors.primary} />
+                                <Text style={[styles.actionText, { color: colors.primary }]}>Call</Text>
+                            </TouchableOpacity>
+                        )}
 
-                        <TouchableOpacity
-                            style={styles.actionButton}
-                            onPress={() => handleActionPress('website')}
-                            disabled={!place.website}
-                        >
-                            <Globe size={16} color={place.website ? colors.primary : colors.textSecondary} />
-                            <Text style={[
-                                styles.actionText,
-                                { color: place.website ? colors.primary : colors.textSecondary }
-                            ]}>
-                                Website
-                            </Text>
-                        </TouchableOpacity>
+                        {place.website && (
+                            <TouchableOpacity
+                                style={styles.actionButton}
+                                onPress={openWebsite}
+                            >
+                                <Globe size={16} color={colors.primary} />
+                                <Text style={[styles.actionText, { color: colors.primary }]}>Website</Text>
+                            </TouchableOpacity>
+                        )}
                     </View>
                 )}
             </View>
@@ -323,8 +292,5 @@ const styles = StyleSheet.create({
         color: '#007AFF',
         fontWeight: '500',
         marginTop: 4,
-    },
-    actionTextDisabled: {
-        color: '#ccc',
     },
 });

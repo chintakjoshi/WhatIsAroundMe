@@ -14,7 +14,7 @@ export default function NetworkStatus() {
             backgroundColor: colors.searchBackground,
             borderLeftColor: colors.primary
         }]}>
-            <Text style={[styles.text, { color: colors.text }]}>⚠️ {error}</Text>
+            <Text style={[styles.text, { color: colors.text }]}>{error}</Text>
         </View>
     );
 }
